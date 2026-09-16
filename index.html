@@ -278,9 +278,8 @@
                 let res = await req.json();
                 
                 if (res.sucesso) {
-                    alert("✅ Validade Lançada com Sucesso!");
+                    alert("✅ " + res.msg); // <- AQUI (Exibe a mensagem com a prova real da soma)
                     
-                    // Limpa tudo (sem deixar "0" ghost)
                     document.getElementById('val-produto').value = '';
                     document.getElementById('val-caixas').value = '';
                     document.getElementById('val-unidades').value = '';
@@ -291,12 +290,14 @@
                     document.getElementById('val-status').style.color = "#6b7280";
                     gerarCabecalhoAutomatico();
                     
-                    // GERA EXCEL NO BACKGROUND SECRETAMENTE PARA NÃO TRAVAR O USUÁRIO
+                    // GERA EXCEL NO BACKGROUND SECRETAMENTE PARA NÃO TRAVAR A TELA
                     fetch(API_URL, { 
                         method: 'POST', redirect: 'follow',
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify({acao: "gerar_excel"}) 
                     });
+
+                } else {
 
                 } else {
                     alert("❌ Erro: " + res.erro);
