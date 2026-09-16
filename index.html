@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a4d2e">
+    <title>Estoque - Lince</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="tela-home" class="app-container">
+        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
+        <h2 class="titulo-tela" style="font-size: 20px;">Controle de Estoque</h2>
+        <div class="desenvolvedor">Desenvolvido por João Marcelo Magon Bonini</div>
+        
+        <button class="btn-principal" onclick="abrirModulo('validade')">📦 Controle de Validade</button>
+        <button class="btn-secundario" onclick="abrirModulo('vasilhame')">🍾 Controle de Vasilhame (Em Breve)</button>
+    </div>
+
+    <div id="tela-validade" class="app-container" style="display: none;">
+        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo" style="max-width: 150px;">
+        
+        <button class="btn-secundario" style="margin-bottom: 15px; padding: 10px;" onclick="voltarHome()">⬅ Voltar</button>
+        
+        <div class="card">
+            <h3 class="card-titulo">📝 Novo Lançamento</h3>
+            
+            <label class="info-label">ID do Lançamento:</label>
+            <input type="text" id="val-id" class="input-campo travado" readonly>
+            
+            <label class="info-label">Data / Hora:</label>
+            <input type="text" id="val-data-hora" class="input-campo travado" readonly>
+
+            <label class="info-label">Produto: <span style="color:red">*</span></label>
+            <input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
+            <datalist id="lista-produtos"></datalist>
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label class="info-label">Qtd. Caixas:</label>
+                    <input type="number" id="val-caixas" class="input-campo" value="0">
+                </div>
+                <div style="flex:1;">
+                    <label class="info-label">Qtd. Unidades:</label>
+                    <input type="number" id="val-unidades" class="input-campo" value="0">
+                </div>
+            </div>
+
+            <label class="info-label">Data de Validade: <span style="color:red">*</span></label>
+            <input type="date" id="val-data-validade" class="input-campo" onchange="calcularDiasRestantes()">
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <div style="flex: 1;">
+                    <label class="info-label">Dias Restantes:</label>
+                    <input type="text" id="val-dias" class="input-campo travado" style="font-weight: 700; text-align: center; font-size: 18px;" readonly>
+                </div>
+                <div style="flex: 2;">
+                    <label class="info-label">Status da Validade:</label>
+                    <input type="text" id="val-status" class="input-campo travado" style="font-weight: 700; text-align: center;" readonly>
+                </div>
+            </div>
+
+            <button class="btn-principal" id="btn-salvar" onclick="salvarLancamento()">💾 Salvar Lançamento</button>
+            
+            <hr style="border: 1px dashed var(--border-color); margin: 20px 0;">
+            <p style="font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600;">Fechamento Diário</p>
+            <button class="btn-secundario" id="btn-gerar-excel" style="background-color: #10b981; color: white; border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);" onclick="gerarExcel()">📊 Gerar Arquivo Excel na Nuvem</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
