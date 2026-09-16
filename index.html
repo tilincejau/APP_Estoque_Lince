@@ -155,6 +155,7 @@
     </div>
 
     <script>
+        // Link Atualizado da sua Planilha!
         const API_URL = "https://script.google.com/macros/s/AKfycbwfl0et6zSe2Biqqc9SgjtU5eIJSMcuvR4r5zPUngbMovVf4xAeihRhUfS-FdQYK7gXFA/exec"; 
 
         window.onload = async function() {
@@ -163,6 +164,7 @@
             let inputProd = document.getElementById('val-produto');
             inputProd.placeholder = "Carregando produtos... ⏳";
             
+            // Truque para listar todos os produtos ao focar no campo
             inputProd.addEventListener('focus', function() {
                 this.dataset.oldValue = this.value;
                 this.value = ''; 
@@ -252,8 +254,6 @@
             let dataVal = document.getElementById('val-data-validade').value;
             
             if(!produto || !dataVal) return alert("❌ Preencha o Produto e a Data de Validade!");
-            
-            // Aceitar 0, mas pelo menos 1 campo precisa ter valor digitado
             if(caixas === "" && unidades === "") return alert("❌ Digite a quantidade de Caixas ou Unidades!");
 
             let btn = document.getElementById('btn-salvar');
@@ -278,7 +278,8 @@
                 let res = await req.json();
                 
                 if (res.sucesso) {
-                    alert("✅ " + res.msg); // <- AQUI (Exibe a mensagem com a prova real da soma)
+                    // Mensagem nova de Prova Real
+                    alert("✅ " + res.msg);
                     
                     document.getElementById('val-produto').value = '';
                     document.getElementById('val-caixas').value = '';
@@ -290,14 +291,12 @@
                     document.getElementById('val-status').style.color = "#6b7280";
                     gerarCabecalhoAutomatico();
                     
-                    // GERA EXCEL NO BACKGROUND SECRETAMENTE PARA NÃO TRAVAR A TELA
+                    // GERA EXCEL NO BACKGROUND SECRETAMENTE
                     fetch(API_URL, { 
                         method: 'POST', redirect: 'follow',
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify({acao: "gerar_excel"}) 
-                    });
-
-                } else {
+                    }).catch(e => console.log("Erro silencioso ao gerar Excel:", e));
 
                 } else {
                     alert("❌ Erro: " + res.erro);
