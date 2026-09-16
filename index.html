@@ -146,16 +146,12 @@
                 </div>
             </div>
 
-            <button class="btn-principal" id="btn-salvar" onclick="salvarLancamento()">💾 Salvar Lançamento</button>
-            
-            <hr style="border: 1px dashed var(--border-color); margin: 20px 0;">
-            <p style="font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600;">Fechamento Diário</p>
-            <button class="btn-secundario" id="btn-gerar-excel" style="background-color: #10b981; color: white; border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);" onclick="gerarExcelManual()">📊 Gerar Arquivo Excel na Nuvem</button>
+            <!-- Botão modificado para ficar mais isolado, sem a barra divisória abaixo -->
+            <button class="btn-principal" id="btn-salvar" style="margin-bottom: 5px; margin-top: 10px;" onclick="salvarLancamento()">💾 Salvar Lançamento</button>
         </div>
     </div>
 
     <script>
-        // Link Atualizado da sua Planilha!
         const API_URL = "https://script.google.com/macros/s/AKfycbwfl0et6zSe2Biqqc9SgjtU5eIJSMcuvR4r5zPUngbMovVf4xAeihRhUfS-FdQYK7gXFA/exec"; 
 
         window.onload = async function() {
@@ -164,7 +160,6 @@
             let inputProd = document.getElementById('val-produto');
             inputProd.placeholder = "Carregando produtos... ⏳";
             
-            // Truque para listar todos os produtos ao focar no campo
             inputProd.addEventListener('focus', function() {
                 this.dataset.oldValue = this.value;
                 this.value = ''; 
@@ -278,7 +273,6 @@
                 let res = await req.json();
                 
                 if (res.sucesso) {
-                    // Mensagem nova de Prova Real
                     alert("✅ " + res.msg);
                     
                     document.getElementById('val-produto').value = '';
@@ -291,12 +285,12 @@
                     document.getElementById('val-status').style.color = "#6b7280";
                     gerarCabecalhoAutomatico();
                     
-                    // GERA EXCEL NO BACKGROUND SECRETAMENTE
+                    // GERA EXCEL EM BACKGROUND
                     fetch(API_URL, { 
                         method: 'POST', redirect: 'follow',
                         headers: { "Content-Type": "text/plain;charset=utf-8" },
                         body: JSON.stringify({acao: "gerar_excel"}) 
-                    }).catch(e => console.log("Erro silencioso ao gerar Excel:", e));
+                    }).catch(e => console.log(e));
 
                 } else {
                     alert("❌ Erro: " + res.erro);
@@ -304,27 +298,6 @@
             } catch(e) { alert("❌ Erro de conexão."); }
             
             btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
-        }
-
-        async function gerarExcelManual() {
-            let btn = document.getElementById('btn-gerar-excel');
-            btn.innerText = "Gerando Planilha... ⏳"; btn.disabled = true;
-
-            try {
-                let req = await fetch(API_URL, { 
-                    method: 'POST', redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({acao: "gerar_excel"}) 
-                });
-                let res = await req.json();
-                if (res.sucesso) {
-                    alert("✅ Relatório Excel gerado na pasta do Drive!");
-                } else {
-                    alert("❌ Erro: " + res.erro);
-                }
-            } catch(e) { alert("❌ Erro de conexão."); }
-            
-            btn.innerText = "📊 Gerar Arquivo Excel na Nuvem"; btn.disabled = false;
         }
     </script>
 </body>
