@@ -169,6 +169,19 @@
             let inputProd = document.getElementById('val-produto');
             inputProd.placeholder = "Carregando produtos... ⏳";
             
+            // ---> TRUQUE PARA MOSTRAR A LISTA INTEIRA AO CLICAR <---
+            inputProd.addEventListener('focus', function() {
+                this.dataset.oldValue = this.value;
+                this.value = ''; // Apaga pro navegador mostrar tudo
+            });
+            inputProd.addEventListener('blur', function() {
+                // Se clicou fora e não escolheu nada novo, volta o que tava
+                if (this.value.trim() === '') {
+                    this.value = this.dataset.oldValue || '';
+                }
+            });
+            // --------------------------------------------------------
+
             try {
                 let req = await fetch(API_URL, { 
                     method: 'POST', 
