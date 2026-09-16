@@ -8,7 +8,92 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================================
+           SISTEMA DE ESTOQUE - CSS MODERNO
+           ========================================================= */
+        :root {
+            --primary-color: #1a4d2e;
+            --primary-light: #256b40;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --input-bg: #f9fafb;
+        }
+
+        body { 
+            margin: 0; padding: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            display: flex; flex-direction: column; align-items: center; 
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container { 
+            width: 100%; max-width: 420px; padding: 25px 20px; 
+            box-sizing: border-box; display: flex; flex-direction: column; 
+        }
+
+        .logo { width: 100%; max-width: 220px; display: block; margin: 0 auto 15px auto; }
+        .desenvolvedor { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: -10px; margin-bottom: 25px; font-weight: 500;}
+
+        .input-campo { 
+            width: 100%; padding: 14px 16px; margin-bottom: 15px; 
+            border: 1.5px solid var(--border-color); border-radius: 12px; 
+            box-sizing: border-box; font-size: 15px; font-family: 'Inter', sans-serif;
+            background-color: var(--input-bg); color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+        .input-campo:focus {
+            outline: none; border-color: var(--primary-color);
+            background-color: #fff; box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1);
+        }
+
+        .input-campo.travado { 
+            background-color: #e5e7eb; border-color: #d1d5db; 
+            color: var(--text-muted); pointer-events: none; 
+            font-weight: 600; text-align: center;
+        }
+
+        .btn-principal { 
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%); 
+            color: white; border: none; border-radius: 14px; 
+            padding: 16px 20px; margin-bottom: 15px; 
+            font-size: 15px; font-weight: 600; width: 100%; 
+            cursor: pointer; box-shadow: 0 6px 15px rgba(26, 77, 46, 0.25);
+            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
+        }
+        .btn-principal:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(26, 77, 46, 0.2); }
+
+        .btn-secundario { 
+            background-color: #e5e7eb; color: #374151; border: none; 
+            border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; 
+            font-size: 14px; font-weight: 600; width: 100%; 
+            cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-secundario:active { transform: scale(0.97); background-color: #d1d5db; }
+
+        .titulo-tela { text-align: center; color: var(--primary-color); font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;}
+
+        .card { 
+            background-color: var(--card-bg); border-radius: 16px; padding: 20px; 
+            margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .card-titulo { 
+            font-size: 16px; color: var(--text-main); margin: 0 0 15px 0; 
+            padding-left: 10px; border-left: 4px solid var(--primary-color); 
+            display: inline-block; font-weight: 700; letter-spacing: -0.3px;
+        }
+
+        .info-label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; font-size: 13px;}
+    </style>
 </head>
 <body>
 
@@ -36,7 +121,7 @@
             <input type="text" id="val-data-hora" class="input-campo travado" readonly>
 
             <label class="info-label">Produto: <span style="color:red">*</span></label>
-            <input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
+            <input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Carregando produtos... ⏳">
             <datalist id="lista-produtos"></datalist>
 
             <div style="display: flex; gap: 10px;">
@@ -56,11 +141,11 @@
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <div style="flex: 1;">
                     <label class="info-label">Dias Restantes:</label>
-                    <input type="text" id="val-dias" class="input-campo travado" style="font-weight: 700; text-align: center; font-size: 18px;" readonly>
+                    <input type="text" id="val-dias" class="input-campo travado" style="font-size: 18px;" readonly>
                 </div>
                 <div style="flex: 2;">
                     <label class="info-label">Status da Validade:</label>
-                    <input type="text" id="val-status" class="input-campo travado" style="font-weight: 700; text-align: center;" readonly>
+                    <input type="text" id="val-status" class="input-campo travado" readonly>
                 </div>
             </div>
 
@@ -72,6 +157,167 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        /* =========================================================
+           SISTEMA DE ESTOQUE - JS FRONTEND INLINE
+           ========================================================= */
+        const API_URL = "https://script.google.com/macros/s/AKfycbwfl0et6zSe2Biqqc9SgjtU5eIJSMcuvR4r5zPUngbMovVf4xAeihRhUfS-FdQYK7gXFA/exec"; 
+
+        window.onload = async function() {
+            gerarCabecalhoAutomatico();
+            
+            let inputProd = document.getElementById('val-produto');
+            inputProd.placeholder = "Carregando produtos... ⏳";
+            
+            try {
+                let req = await fetch(API_URL, { 
+                    method: 'POST', 
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ acao: 'buscar_produtos' }) 
+                });
+                
+                let res = await req.json();
+                
+                if(res.sucesso && res.produtos && res.produtos.length > 0) {
+                    let options = '';
+                    res.produtos.forEach(p => {
+                        options += `<option value="${p.nome}">`;
+                    });
+                    document.getElementById('lista-produtos').innerHTML = options;
+                    inputProd.placeholder = "Selecione ou digite o produto...";
+                } else {
+                    inputProd.placeholder = "Nenhum produto cadastrado na aba Produtos.";
+                }
+            } catch(e) { 
+                console.log("Erro ao carregar produtos:", e);
+                inputProd.placeholder = "⚠️ Erro: Salve o script e faça a Implantação.";
+            }
+        };
+
+        function gerarCabecalhoAutomatico() {
+            let idUnico = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+            document.getElementById('val-id').value = idUnico;
+            
+            let hj = new Date();
+            let formatada = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear() + " " + ("0"+hj.getHours()).slice(-2) + ":" + ("0"+hj.getMinutes()).slice(-2);
+            document.getElementById('val-data-hora').value = formatada;
+        }
+
+        function abrirModulo(modulo) {
+            document.getElementById('tela-home').style.display = 'none';
+            if(modulo === 'validade') {
+                document.getElementById('tela-validade').style.display = 'flex';
+                gerarCabecalhoAutomatico();
+            } else {
+                alert("Módulo Vasilhame estará disponível em breve!");
+                document.getElementById('tela-home').style.display = 'flex';
+            }
+        }
+
+        function voltarHome() {
+            document.getElementById('tela-validade').style.display = 'none';
+            document.getElementById('tela-home').style.display = 'flex';
+        }
+
+        function calcularDiasRestantes() {
+            let dt = document.getElementById('val-data-validade').value;
+            if(!dt) return;
+            
+            let valDate = new Date(dt + "T00:00:00");
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            let diff = Math.ceil((valDate - hoje) / (1000 * 3600 * 24));
+            document.getElementById('val-dias').value = diff;
+            
+            let statusEl = document.getElementById('val-status');
+            if (diff <= 45) {
+                statusEl.value = "VALIDADE CURTA";
+                statusEl.style.backgroundColor = "#fee2e2";
+                statusEl.style.color = "#dc2626";
+            } else if (diff < 60) {
+                statusEl.value = "ATENÇÃO";
+                statusEl.style.backgroundColor = "#fef3c7";
+                statusEl.style.color = "#d97706";
+            } else {
+                statusEl.value = "OK";
+                statusEl.style.backgroundColor = "#d1fae5";
+                statusEl.style.color = "#059669";
+            }
+        }
+
+        async function salvarLancamento() {
+            let produto = document.getElementById('val-produto').value;
+            let caixas = document.getElementById('val-caixas').value;
+            let unidades = document.getElementById('val-unidades').value;
+            let dataVal = document.getElementById('val-data-validade').value;
+            
+            if(!produto || !dataVal) return alert("❌ Preencha o Produto e a Data de Validade!");
+            if(caixas == 0 && unidades == 0) return alert("❌ Insira alguma quantidade (Caixas ou Unidades)!");
+
+            let btn = document.getElementById('btn-salvar');
+            btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+
+            let payload = {
+                acao: "salvar_validade",
+                id: document.getElementById('val-id').value,
+                data_hora: document.getElementById('val-data-hora').value,
+                produto: produto,
+                caixas: caixas,
+                unidades: unidades,
+                data_validade: dataVal
+            };
+
+            try {
+                let req = await fetch(API_URL, { 
+                    method: 'POST', 
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload) 
+                });
+                let res = await req.json();
+                
+                if (res.sucesso) {
+                    alert("✅ Validade Lançada com Sucesso!");
+                    document.getElementById('val-produto').value = '';
+                    document.getElementById('val-caixas').value = '0';
+                    document.getElementById('val-unidades').value = '0';
+                    document.getElementById('val-data-validade').value = '';
+                    document.getElementById('val-dias').value = '';
+                    document.getElementById('val-status').value = '';
+                    document.getElementById('val-status').style.backgroundColor = "#e5e7eb";
+                    document.getElementById('val-status').style.color = "#6b7280";
+                    gerarCabecalhoAutomatico();
+                } else {
+                    alert("❌ Erro: " + res.erro);
+                }
+            } catch(e) { alert("❌ Erro de conexão."); }
+            
+            btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
+        }
+
+        async function gerarExcel() {
+            let btn = document.getElementById('btn-gerar-excel');
+            btn.innerText = "Gerando Planilha... ⏳"; btn.disabled = true;
+
+            try {
+                let req = await fetch(API_URL, { 
+                    method: 'POST', 
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({acao: "gerar_excel"}) 
+                });
+                let res = await req.json();
+                if (res.sucesso) {
+                    alert("✅ Relatório Excel gerado na pasta do Drive!");
+                } else {
+                    alert("❌ Erro: " + res.erro);
+                }
+            } catch(e) { alert("❌ Erro de conexão."); }
+            
+            btn.innerText = "📊 Gerar Arquivo Excel na Nuvem"; btn.disabled = false;
+        }
+    </script>
 </body>
 </html>
