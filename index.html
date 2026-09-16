@@ -1,304 +1,316 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1a4d2e">
-    <title>Estoque - Lince</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+/* =========================================================
+   SISTEMA DE ESTOQUE - VALIDADE E VASILHAME (BACKEND)
+   ========================================================= */
+
+var FOLDER_ID = "1nFLgT5C-341jpBemdjXJzdJM71mm7jly"; // ID da pasta do Drive
+
+function doGet(e) {
+  var html = HtmlService.createHtmlOutputFromFile('index');
+  html.addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  return html.setTitle('Controle de Estoque - Lince');
+}
+
+function doPost(e) {
+  try {
+    var dados = JSON.parse(e.postData.contents);
+    var acao = dados.acao;
     
-    <style>
-        :root {
-            --primary-color: #1a4d2e;
-            --primary-light: #256b40;
-            --bg-color: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-            --input-bg: #f9fafb;
+    if (acao === 'buscar_produtos') return buscarProdutos();
+    if (acao === 'salvar_validade') return salvarValidade(dados);
+    if (acao === 'gerar_excel') return gerarRelatorioExcel(); 
+    
+    return ContentService.createTextOutput(JSON.stringify({"erro": "Ação não encontrada"})).setMimeType(ContentService.MimeType.JSON);
+  } catch (erro) {
+    return ContentService.createTextOutput(JSON.stringify({"erro": erro.message})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function buscarProdutos() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var abaProd = ss.getSheetByName("Produtos");
+  var lista = [];
+  
+  if (abaProd) {
+    var pVal = abaProd.getDataRange().getValues();
+    if(pVal && pVal.length > 0) {
+      var colNome = 0; var colFator = 1;
+      
+      for(var c=0; c < pVal[0].length; c++) {
+          var h = String(pVal[0][c]).toUpperCase();
+          if(h.includes("PRODUTO") || h.includes("DESCRI") || h.includes("NOME")) colNome = c;
+          if(h.includes("QTD/UN") || h.includes("FATOR") || h.includes("UNIDADE") || h.includes("CAIXA")) colFator = c;
+      }
+
+      for (var i = 1; i < pVal.length; i++) {
+        var nome = String(pVal[i][colNome]).trim();
+        var fator = parseInt(pVal[i][colFator], 10) || 1; 
+        if (nome !== "" && nome !== "undefined") {
+          lista.push({ nome: nome, fator: fator });
         }
+      }
+    }
+  }
+  return ContentService.createTextOutput(JSON.stringify({ sucesso: true, produtos: lista })).setMimeType(ContentService.MimeType.JSON);
+}
 
-        body { 
-            margin: 0; padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-color); 
-            display: flex; flex-direction: column; align-items: center; 
-            color: var(--text-main);
-            -webkit-font-smoothing: antialiased;
+function salvarValidade(dados) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(5000); 
+  
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var abaVal = ss.getSheetByName("Controle de validade");
+    
+    if (!abaVal) {
+      abaVal = ss.insertSheet("Controle de validade");
+      abaVal.appendRow(["ID", "Data/Hora", "Produto", "Qtd_Caixas", "Qtd_Unidade", "Data_Validade"]);
+    }
+
+    var val = abaVal.getDataRange().getValues();
+    
+    var header = val[0] || ["ID", "Data/Hora", "Produto", "Qtd_Caixas", "Qtd_Unidade", "Data_Validade"];
+    var colProd = 2, colCaixas = 3, colUnidades = 4, colDataVal = 5;
+    for(var c=0; c<header.length; c++){
+      var h = String(header[c]).toUpperCase();
+      if(h === "PRODUTO" || h === "PRODUTOS") colProd = c;
+      if(h.includes("CAIXA")) colCaixas = c;
+      if(h.includes("UNIDADE")) colUnidades = c;
+      if(h.includes("VALIDADE") && !h.includes("STATUS")) colDataVal = c;
+    }
+
+    var atualizou = false;
+    var novaQtdCaixas = parseInt(dados.caixas, 10);
+    if (isNaN(novaQtdCaixas)) novaQtdCaixas = 0;
+    var novaQtdUnid = parseInt(dados.unidades, 10);
+    if (isNaN(novaQtdUnid)) novaQtdUnid = 0;
+    
+    var dataValStr = String(dados.data_validade).trim();
+    var produtoStr = String(dados.produto).trim();
+    
+    var fatorCaixa = 0;
+    var abaProd = ss.getSheetByName("Produtos");
+    if(abaProd) {
+      var pVal = abaProd.getDataRange().getValues();
+      if(pVal.length > 0) {
+        var cNome = 0, cFator = 1;
+        for(var cx=0; cx < pVal[0].length; cx++) {
+            var hx = String(pVal[0][cx]).toUpperCase();
+            if(hx.includes("PRODUTO") || hx.includes("DESCRI") || hx.includes("NOME")) cNome = cx;
+            if(hx.includes("QTD/UN") || hx.includes("FATOR") || hx.includes("UNIDADE") || h.includes("CAIXA")) cFator = cx;
         }
-
-        .app-container { 
-            width: 100%; max-width: 420px; padding: 25px 20px; 
-            box-sizing: border-box; display: flex; flex-direction: column; 
+        for(var j = 1; j < pVal.length; j++) {
+          if(String(pVal[j][cNome]).trim() === produtoStr) {
+            fatorCaixa = parseInt(pVal[j][cFator], 10);
+            break;
+          }
         }
+      }
+    }
 
-        .logo { width: 100%; max-width: 220px; display: block; margin: 0 auto 15px auto; }
-        .desenvolvedor { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: -10px; margin-bottom: 25px; font-weight: 500;}
+    if (!fatorCaixa || isNaN(fatorCaixa) || fatorCaixa <= 0) {
+      var match = produtoStr.match(/(\d+)\s*UN/i);
+      if (match) fatorCaixa = parseInt(match[1], 10);
+      else fatorCaixa = 1; 
+    }
 
-        .input-campo { 
-            width: 100%; padding: 14px 16px; margin-bottom: 15px; 
-            border: 1.5px solid var(--border-color); border-radius: 12px; 
-            box-sizing: border-box; font-size: 15px; font-family: 'Inter', sans-serif;
-            background-color: var(--input-bg); color: var(--text-main);
-            transition: all 0.3s ease;
-        }
-        .input-campo:focus {
-            outline: none; border-color: var(--primary-color);
-            background-color: #fff; box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1);
-        }
+    var totalInputUnidades = (novaQtdCaixas * fatorCaixa) + novaQtdUnid;
+    var finalCaixas = 0; 
+    var finalUnidades = 0;
 
-        .input-campo.travado { 
-            background-color: #e5e7eb; border-color: #d1d5db; 
-            color: var(--text-muted); pointer-events: none; 
-            font-weight: 600; text-align: center;
-        }
-
-        .btn-principal { 
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%); 
-            color: white; border: none; border-radius: 14px; 
-            padding: 16px 20px; margin-bottom: 15px; 
-            font-size: 15px; font-weight: 600; width: 100%; 
-            cursor: pointer; box-shadow: 0 6px 15px rgba(26, 77, 46, 0.25);
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-            font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
-        }
-        .btn-principal:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(26, 77, 46, 0.2); }
-
-        .btn-secundario { 
-            background-color: #e5e7eb; color: #374151; border: none; 
-            border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; 
-            font-size: 14px; font-weight: 600; width: 100%; 
-            cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
-        }
-        .btn-secundario:active { transform: scale(0.97); background-color: #d1d5db; }
-
-        .titulo-tela { text-align: center; color: var(--primary-color); font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;}
-
-        .card { 
-            background-color: var(--card-bg); border-radius: 16px; padding: 20px; 
-            margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
-            border: 1px solid rgba(0,0,0,0.02);
-        }
-
-        .card-titulo { 
-            font-size: 16px; color: var(--text-main); margin: 0 0 15px 0; 
-            padding-left: 10px; border-left: 4px solid var(--primary-color); 
-            display: inline-block; font-weight: 700; letter-spacing: -0.3px;
-        }
-
-        .info-label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; font-size: 13px;}
-    </style>
-</head>
-<body>
-
-    <div id="tela-home" class="app-container">
-        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
-        <h2 class="titulo-tela" style="font-size: 20px;">Controle de Estoque</h2>
-        <div class="desenvolvedor">Desenvolvido por João Marcelo Magon Bonini</div>
+    for (var i = 1; i < val.length; i++) {
+      var pPlanilha = String(val[i][colProd]).trim();
+      var dPlanilha = formatarData(val[i][colDataVal]);
+      
+      if (pPlanilha === produtoStr && dPlanilha === dataValStr) {
+        var cExist = parseInt(val[i][colCaixas], 10);
+        if(isNaN(cExist)) cExist = 0;
+        var uExist = parseInt(val[i][colUnidades], 10);
+        if(isNaN(uExist)) uExist = 0;
         
-        <button class="btn-principal" onclick="abrirModulo('validade')">📦 Controle de Validade</button>
-        <button class="btn-secundario" onclick="abrirModulo('vasilhame')">🍾 Controle de Vasilhame (Em Breve)</button>
-    </div>
-
-    <div id="tela-validade" class="app-container" style="display: none;">
-        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo" style="max-width: 150px;">
+        var totalExistente = (cExist * fatorCaixa) + uExist;
+        var totalGeral = totalExistente + totalInputUnidades;
         
-        <button class="btn-secundario" style="margin-bottom: 15px; padding: 10px;" onclick="voltarHome()">⬅ Voltar</button>
+        finalCaixas = Math.floor(totalGeral / fatorCaixa);
+        finalUnidades = totalGeral % fatorCaixa;
         
-        <div class="card">
-            <h3 class="card-titulo">📝 Novo Lançamento</h3>
-            
-            <label class="info-label">ID do Lançamento:</label>
-            <input type="text" id="val-id" class="input-campo travado" readonly>
-            
-            <label class="info-label">Data / Hora:</label>
-            <input type="text" id="val-data-hora" class="input-campo travado" readonly>
+        abaVal.getRange(i + 1, colCaixas + 1).setValue(finalCaixas);
+        abaVal.getRange(i + 1, colUnidades + 1).setValue(finalUnidades);
+        abaVal.getRange(i + 1, 2).setValue(dados.data_hora); 
+        atualizou = true;
+        break;
+      }
+    }
 
-            <label class="info-label">Produto: <span style="color:red">*</span></label>
-            <input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Carregando produtos... ⏳">
-            <datalist id="lista-produtos"></datalist>
+    if (!atualizou) {
+      var idGerado = dados.id;
+      finalCaixas = Math.floor(totalInputUnidades / fatorCaixa);
+      finalUnidades = totalInputUnidades % fatorCaixa;
+      
+      var newRow = [];
+      newRow[0] = idGerado;
+      newRow[1] = dados.data_hora;
+      newRow[colProd] = produtoStr;
+      newRow[colCaixas] = finalCaixas;
+      newRow[colUnidades] = finalUnidades;
+      newRow[colDataVal] = dados.data_validade;
+      
+      abaVal.appendRow(newRow);
+    }
 
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1;">
-                    <label class="info-label">Qtd. Caixas:</label>
-                    <input type="number" id="val-caixas" class="input-campo" placeholder="Ex: 5">
-                </div>
-                <div style="flex:1;">
-                    <label class="info-label">Qtd. Unidades:</label>
-                    <input type="number" id="val-unidades" class="input-campo" placeholder="Ex: 12">
-                </div>
-            </div>
+    SpreadsheetApp.flush();
 
-            <label class="info-label">Data de Validade: <span style="color:red">*</span></label>
-            <input type="date" id="val-data-validade" class="input-campo" onchange="calcularDiasRestantes()">
+    return ContentService.createTextOutput(JSON.stringify({ 
+        sucesso: true, 
+        msg: "Atualizado na Base: " + finalCaixas + " CX e " + finalUnidades + " UN" 
+    })).setMimeType(ContentService.MimeType.JSON);
 
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <div style="flex: 1;">
-                    <label class="info-label">Dias Restantes:</label>
-                    <input type="text" id="val-dias" class="input-campo travado" style="font-size: 18px;" readonly>
-                </div>
-                <div style="flex: 2;">
-                    <label class="info-label">Status da Validade:</label>
-                    <input type="text" id="val-status" class="input-campo travado" readonly>
-                </div>
-            </div>
+  } finally {
+    lock.releaseLock();
+  }
+}
 
-            <!-- Botão modificado para ficar mais isolado, sem a barra divisória abaixo -->
-            <button class="btn-principal" id="btn-salvar" style="margin-bottom: 5px; margin-top: 10px;" onclick="salvarLancamento()">💾 Salvar Lançamento</button>
-        </div>
-    </div>
+function formatarData(d) {
+  if (!d) return "";
+  if (d instanceof Date) return Utilities.formatDate(d, "GMT-03:00", "yyyy-MM-dd");
+  return String(d).trim().substring(0, 10);
+}
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwfl0et6zSe2Biqqc9SgjtU5eIJSMcuvR4r5zPUngbMovVf4xAeihRhUfS-FdQYK7gXFA/exec"; 
+function gerarRelatorioExcel() {
+  try {
+    gerarRelatorioExcelInterno();
+    return ContentService.createTextOutput(JSON.stringify({ sucesso: true })).setMimeType(ContentService.MimeType.JSON);
+  } catch(e) {
+    return ContentService.createTextOutput(JSON.stringify({ erro: e.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
 
-        window.onload = async function() {
-            gerarCabecalhoAutomatico();
-            
-            let inputProd = document.getElementById('val-produto');
-            inputProd.placeholder = "Carregando produtos... ⏳";
-            
-            inputProd.addEventListener('focus', function() {
-                this.dataset.oldValue = this.value;
-                this.value = ''; 
-            });
-            inputProd.addEventListener('blur', function() {
-                if (this.value.trim() === '') this.value = this.dataset.oldValue || '';
-            });
+function gerarRelatorioExcelInterno() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var abaVal = ss.getSheetByName("Controle de validade");
+  if(!abaVal) throw new Error("Aba Validade não encontrada");
+  
+  var dados = abaVal.getDataRange().getValues();
+  if (dados.length <= 1) throw new Error("Nenhum dado para exportar"); 
+  
+  // NOME CLARO DO TEMPORÁRIO PARA EXCLUSÃO OBRIGATÓRIA
+  var tempSS = SpreadsheetApp.create("TEMP_LIXO_APAGAR");
+  var tempId = tempSS.getId(); 
+  
+  try {
+    var sheet = tempSS.getSheets()[0]; 
+    
+    // === 1. RENOMEIA A ABA PRINCIPAL ===
+    var strHoje = Utilities.formatDate(new Date(), "GMT-03:00", "dd-MM-yyyy");
+    sheet.setName("Validade " + strHoje);
+    
+    sheet.appendRow(["Status Validade", "Data Validade", "Dias Restantes", "Produto", "Quantidade de Caixas", "Quantidade de Unidades", "Data/Hora"]);
+    sheet.getRange("A1:G1").setBackground("#1a4d2e").setFontColor("white").setFontWeight("bold");
 
-            try {
-                let req = await fetch(API_URL, { 
-                    method: 'POST', redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ acao: 'buscar_produtos' }) 
-                });
-                
-                let res = await req.json();
-                
-                if(res.sucesso && res.produtos && res.produtos.length > 0) {
-                    let options = '';
-                    res.produtos.forEach(p => { options += `<option value="${p.nome}">`; });
-                    document.getElementById('lista-produtos').innerHTML = options;
-                    inputProd.placeholder = "Selecione ou digite o produto...";
-                } else {
-                    inputProd.placeholder = "Nenhum produto cadastrado na aba.";
-                }
-            } catch(e) { 
-                inputProd.placeholder = "⚠️ Erro: Salve o script e faça a Implantação.";
-            }
-        };
+    var hoje = new Date();
+    hoje.setHours(0,0,0,0);
 
-        function gerarCabecalhoAutomatico() {
-            let idUnico = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-            document.getElementById('val-id').value = idUnico;
-            
-            let hj = new Date();
-            let formatada = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear() + " " + ("0"+hj.getHours()).slice(-2) + ":" + ("0"+hj.getMinutes()).slice(-2);
-            document.getElementById('val-data-hora').value = formatada;
+    var mapFatores = {};
+    var abaProd = ss.getSheetByName("Produtos");
+    if(abaProd) {
+      var pVal = abaProd.getDataRange().getValues();
+      if(pVal.length > 0) {
+        var cNome = 0, cFator = 1;
+        for(var cx=0; cx < pVal[0].length; cx++) {
+            var hx = String(pVal[0][cx]).toUpperCase();
+            if(hx.includes("PRODUTO") || hx.includes("DESCRI") || hx.includes("NOME")) cNome = cx;
+            if(hx.includes("QTD/UN") || hx.includes("FATOR") || hx.includes("UNIDADE") || h.includes("CAIXA")) cFator = cx;
         }
-
-        function abrirModulo(modulo) {
-            document.getElementById('tela-home').style.display = 'none';
-            if(modulo === 'validade') {
-                document.getElementById('tela-validade').style.display = 'flex';
-                gerarCabecalhoAutomatico();
-            } else {
-                alert("Módulo Vasilhame estará disponível em breve!");
-                document.getElementById('tela-home').style.display = 'flex';
-            }
+        for(var j = 1; j < pVal.length; j++) {
+          var nomeP = String(pVal[j][cNome]).trim();
+          var fatorP = parseInt(pVal[j][cFator], 10);
+          if(nomeP && !isNaN(fatorP)) mapFatores[nomeP] = fatorP;
         }
+      }
+    }
 
-        function voltarHome() {
-            document.getElementById('tela-validade').style.display = 'none';
-            document.getElementById('tela-home').style.display = 'flex';
-        }
+    var aggProdutos = {}; 
 
-        function calcularDiasRestantes() {
-            let dt = document.getElementById('val-data-validade').value;
-            if(!dt) return;
-            
-            let valDate = new Date(dt + "T00:00:00");
-            let hoje = new Date();
-            hoje.setHours(0,0,0,0);
-            
-            let diff = Math.ceil((valDate - hoje) / (1000 * 3600 * 24));
-            document.getElementById('val-dias').value = diff;
-            
-            let statusEl = document.getElementById('val-status');
-            if (diff <= 45) {
-                statusEl.value = "VALIDADE CURTA";
-                statusEl.style.backgroundColor = "#fee2e2";
-                statusEl.style.color = "#dc2626";
-            } else if (diff < 60) {
-                statusEl.value = "ATENÇÃO";
-                statusEl.style.backgroundColor = "#fef3c7";
-                statusEl.style.color = "#d97706";
-            } else {
-                statusEl.value = "OK";
-                statusEl.style.backgroundColor = "#d1fae5";
-                statusEl.style.color = "#059669";
-            }
-        }
+    for (var i = 1; i < dados.length; i++) {
+      var valDateStr = dados[i][5];
+      var dataRef = new Date(valDateStr + "T00:00:00");
+      if (isNaN(dataRef.getTime())) dataRef = new Date(valDateStr); 
+      
+      var timeDiff = dataRef.getTime() - hoje.getTime();
+      var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      var status = "OK"; var bg = "#d1fae5"; var cor = "#059669"; 
+      if (diffDays <= 45) { status = "VALIDADE CURTA"; bg = "#fee2e2"; cor = "#dc2626"; } 
+      else if (diffDays < 60) { status = "ATENÇÃO"; bg = "#fef3c7"; cor = "#d97706"; } 
+      
+      var formataDt = Utilities.formatDate(dataRef, "GMT-03:00", "dd/MM/yyyy");
+      
+      var prodStr = String(dados[i][2]).trim();
+      var cxStr = parseInt(dados[i][3], 10) || 0;
+      var unStr = parseInt(dados[i][4], 10) || 0;
+      
+      sheet.appendRow([status, formataDt, diffDays, prodStr, cxStr, unStr, dados[i][1]]);
+      var lastRow = sheet.getLastRow();
+      sheet.getRange(lastRow, 1, 1, 7).setBackground(bg).setFontColor(cor).setFontWeight("bold");
 
-        async function salvarLancamento() {
-            let produto = document.getElementById('val-produto').value;
-            let caixas = document.getElementById('val-caixas').value;
-            let unidades = document.getElementById('val-unidades').value;
-            let dataVal = document.getElementById('val-data-validade').value;
-            
-            if(!produto || !dataVal) return alert("❌ Preencha o Produto e a Data de Validade!");
-            if(caixas === "" && unidades === "") return alert("❌ Digite a quantidade de Caixas ou Unidades!");
+      var fator = mapFatores[prodStr];
+      if(!fator || isNaN(fator) || fator <= 0) {
+        var match = prodStr.match(/(\d+)\s*UN/i);
+        if (match) fator = parseInt(match[1], 10);
+        else fator = 1; 
+      }
+      
+      var totalUn = (cxStr * fator) + unStr;
+      if(!aggProdutos[prodStr]) {
+        aggProdutos[prodStr] = { total: 0, fator: fator };
+      }
+      aggProdutos[prodStr].total += totalUn;
+    }
 
-            let btn = document.getElementById('btn-salvar');
-            btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+    sheet.autoResizeColumns(1, 7);
 
-            let payload = {
-                acao: "salvar_validade",
-                id: document.getElementById('val-id').value,
-                data_hora: document.getElementById('val-data-hora').value,
-                produto: produto,
-                caixas: caixas,
-                unidades: unidades,
-                data_validade: dataVal
-            };
+    // === 2. CRIAÇÃO DA ABA 2: Dig. Estoque ===
+    var sheetAgg = tempSS.insertSheet("Dig. Estoque");
+    sheetAgg.appendRow(["Produto", "Quantidade Caixa", "Quantidade Unidade"]);
+    sheetAgg.getRange("A1:C1").setBackground("#1e3a8a").setFontColor("white").setFontWeight("bold"); 
+    
+    for(var p in aggProdutos) {
+      var t = aggProdutos[p].total;
+      var f = aggProdutos[p].fator;
+      var fCx = Math.floor(t / f);
+      var fUn = t % f;
+      sheetAgg.appendRow([p, fCx, fUn]);
+    }
+    sheetAgg.autoResizeColumns(1, 3);
+    
+    // Força o Google a aplicar as abas antes de exportar
+    SpreadsheetApp.flush();
+    Utilities.sleep(3000); // 3 segundos de fôlego para o Servidor Google
+    
+    // Chama a URL da API do Google Docs para exportar para Excel
+    var url = "https://docs.google.com/spreadsheets/d/" + tempId + "/export?format=xlsx";
+    var token = ScriptApp.getOAuthToken();
+    var response = UrlFetchApp.fetch(url, { 
+        headers: { 'Authorization': 'Bearer ' + token },
+        muteHttpExceptions: true
+    });
+    
+    if (response.getResponseCode() !== 200) {
+        throw new Error("HTTP " + response.getResponseCode() + " Negado pelo Servidor");
+    }
+    
+    var folder = DriveApp.getFolderById(FOLDER_ID);
+    var nomeArquivo = "Controle Validade " + strHoje + ".xlsx";
+    
+    var arquivosAntigos = folder.searchFiles('title = "' + nomeArquivo + '"');
+    while (arquivosAntigos.hasNext()) { arquivosAntigos.next().setTrashed(true); }
+    
+    var blob = response.getBlob().setName(nomeArquivo);
+    folder.createFile(blob);
 
-            try {
-                let req = await fetch(API_URL, { 
-                    method: 'POST', redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload) 
-                });
-                let res = await req.json();
-                
-                if (res.sucesso) {
-                    alert("✅ " + res.msg);
-                    
-                    document.getElementById('val-produto').value = '';
-                    document.getElementById('val-caixas').value = '';
-                    document.getElementById('val-unidades').value = '';
-                    document.getElementById('val-data-validade').value = '';
-                    document.getElementById('val-dias').value = '';
-                    document.getElementById('val-status').value = '';
-                    document.getElementById('val-status').style.backgroundColor = "#e5e7eb";
-                    document.getElementById('val-status').style.color = "#6b7280";
-                    gerarCabecalhoAutomatico();
-                    
-                    // GERA EXCEL EM BACKGROUND
-                    fetch(API_URL, { 
-                        method: 'POST', redirect: 'follow',
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({acao: "gerar_excel"}) 
-                    }).catch(e => console.log(e));
-
-                } else {
-                    alert("❌ Erro: " + res.erro);
-                }
-            } catch(e) { alert("❌ Erro de conexão."); }
-            
-            btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
-        }
-    </script>
-</body>
-</html>
+  } finally {
+    // GARANTIA MÁXIMA: Deleta o temp da página inicial sempre, dando erro ou não!
+    try {
+      DriveApp.getFileById(tempId).setTrashed(true);
+    } catch(e) {}
+  }
+}
