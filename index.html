@@ -10,12 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --primary-color: #1a4d2e; --primary-light: #256b40;
-            --bg-color: #f0f2f5; --card-bg: #ffffff;
-            --text-main: #111827; --text-muted: #6b7280;
-            --border-color: #e5e7eb; --input-bg: #f9fafb;
-        }
+        :root { --primary-color: #1a4d2e; --primary-light: #256b40; --bg-color: #f0f2f5; --card-bg: #ffffff; --text-main: #111827; --text-muted: #6b7280; --border-color: #e5e7eb; --input-bg: #f9fafb; }
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .app-container { width: 100%; max-width: 420px; padding: 25px 20px; box-sizing: border-box; display: flex; flex-direction: column; }
         .logo { width: 100%; max-width: 220px; display: block; margin: 0 auto 15px auto; }
@@ -50,7 +45,7 @@
         <button class="btn-secundario" style="margin-bottom: 15px; padding: 10px;" onclick="voltarHome()">⬅ Voltar</button>
         
         <div class="card">
-            <h3 class="card-titulo">📝 Novo Lançamento (Validade)</h3>
+            <h3 class="card-titulo">📝 Novo Lançamento</h3>
             <label class="info-label">ID do Lançamento:</label><input type="text" id="val-id" class="input-campo travado" readonly>
             <label class="info-label">Data / Hora:</label><input type="text" id="val-data-hora" class="input-campo travado" readonly>
             <label class="info-label">Produto: <span style="color:red">*</span></label><input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Carregando produtos... ⏳">
@@ -103,13 +98,11 @@
                 <option value="">Carregando vasilhames... ⏳</option>
             </select>
 
-            <!-- Grupo Barril -->
             <div id="div-vas-barril" style="display:none; background: #fef3c7; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1.5px dashed #f59e0b;">
                 <label class="info-label" style="color: #b45309;">Qtd. Barril:</label>
                 <input type="number" id="vas-barril" class="input-campo" placeholder="Ex: 5" style="margin-bottom:0; background: #fff;">
             </div>
 
-            <!-- Grupo Caixas -->
             <div id="div-vas-caixas" style="display:none; background: #eff6ff; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1.5px dashed #3b82f6;">
                 <label class="info-label" style="color: #1d4ed8;">Caixas Completas (C/ Garrafas):</label>
                 <input type="number" id="vas-caixas-comp" class="input-campo" placeholder="Ex: 10" style="background: #fff;">
@@ -125,17 +118,18 @@
             
             <hr style="border: 1px dashed var(--border-color); margin: 20px 0;">
             <p style="font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600;">Fechamento de Final de Dia</p>
+            
+            <button class="btn-secundario" id="btn-sync-txt" style="background-color: #4f46e5; color: white; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); margin-bottom: 10px;" onclick="sincronizarTxt()">📥 Puxar Arquivos TXT da Pasta</button>
+            
             <button class="btn-secundario" id="btn-gerar-pdf-vas" style="background-color: #b30000; color: white; border: none; box-shadow: 0 4px 10px rgba(179, 0, 0, 0.3);" onclick="gerarPdfVasilhame()">📄 Fechar Inventário e Gerar PDF</button>
         </div>
     </div>
 
     <script>
-        // LINK ATUALIZADO:
         const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; 
 
         window.onload = async function() {
             gerarCabecalhoAutomatico();
-            
             let inputProd = document.getElementById('val-produto');
             let selVas = document.getElementById('vas-vasilhame');
             inputProd.placeholder = "Carregando sistema... ⏳";
@@ -146,12 +140,10 @@
             try {
                 let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ acao: 'buscar_dados_iniciais' }) });
                 let res = await req.json();
-                
                 if(res.sucesso) {
                     let optProd = ''; res.produtos.forEach(p => { optProd += `<option value="${p.nome}">`; });
                     document.getElementById('lista-produtos').innerHTML = optProd;
                     inputProd.placeholder = "Selecione ou digite o produto...";
-
                     let optVas = '<option value="">Selecione o Vasilhame...</option>';
                     res.vasilhames.forEach(v => { optVas += `<option value="${v}">${v}</option>`; });
                     selVas.innerHTML = optVas;
@@ -165,7 +157,6 @@
         function gerarCabecalhoAutomatico() {
             let idUnico = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase();
             if(document.getElementById('val-id')) document.getElementById('val-id').value = idUnico;
-            
             let hj = new Date();
             let formatada = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear() + " " + ("0"+hj.getHours()).slice(-2) + ":" + ("0"+hj.getMinutes()).slice(-2);
             if(document.getElementById('val-data-hora')) document.getElementById('val-data-hora').value = formatada;
@@ -175,11 +166,8 @@
         function abrirModulo(modulo) {
             document.getElementById('tela-home').style.display = 'none';
             gerarCabecalhoAutomatico();
-            if(modulo === 'validade') {
-                document.getElementById('tela-validade').style.display = 'flex';
-            } else if(modulo === 'vasilhame') {
-                document.getElementById('tela-vasilhame').style.display = 'flex';
-            }
+            if(modulo === 'validade') { document.getElementById('tela-validade').style.display = 'flex'; } 
+            else if(modulo === 'vasilhame') { document.getElementById('tela-vasilhame').style.display = 'flex'; }
         }
 
         function voltarHome() {
@@ -188,9 +176,6 @@
             document.getElementById('tela-home').style.display = 'flex';
         }
 
-        // ==========================================
-        // LÓGICA DE VALIDADE
-        // ==========================================
         function calcularDiasRestantes() {
             let dt = document.getElementById('val-data-validade').value;
             if(!dt) return;
@@ -234,9 +219,6 @@
             } catch(e) { alert("❌ Erro de conexão."); btn.style.background = ""; btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; }
         }
 
-        // ==========================================
-        // LÓGICA DE VASILHAMES
-        // ==========================================
         function verificarNovoUsuarioVas(sel) {
             let inNovo = document.getElementById('vas-usuario-novo');
             if(sel.value === "NOVO") { inNovo.style.display = "block"; inNovo.focus(); }
@@ -253,9 +235,9 @@
             document.getElementById('vas-caixas-inc').value = '';
             document.getElementById('vas-garrafas').value = '';
 
-            if(vas.includes("BARRIL")) {
+            if(vas.includes("BARRIL") || vas.includes("CILINDRO")) {
                 divBar.style.display = 'block'; divCx.style.display = 'none';
-            } else if(vas.includes("CAIXA") || vas.includes("ENGRA")) {
+            } else if(vas.includes("CAIXA") || vas.includes("ENGRA") || vas.includes("GARRAFA")) {
                 divBar.style.display = 'none'; divCx.style.display = 'block';
             } else {
                 divBar.style.display = 'none'; divCx.style.display = 'none';
@@ -275,17 +257,14 @@
             let cI = document.getElementById('vas-caixas-inc').value;
             let av = document.getElementById('vas-garrafas').value;
 
-            if(vas.toUpperCase().includes("BARRIL") && b === "") return alert("❌ Digite a Qtd. de Barris!");
-            if(vas.toUpperCase().includes("CAIXA") && cC === "" && cI === "" && av === "") return alert("❌ Digite pelo menos uma quantidade (Caixa ou Garrafas)!");
+            if((vas.toUpperCase().includes("BARRIL") || vas.toUpperCase().includes("CILINDRO")) && b === "") return alert("❌ Digite a Qtd. de Barris!");
+            if((vas.toUpperCase().includes("CAIXA") || vas.toUpperCase().includes("GARRAFA")) && cC === "" && cI === "" && av === "") return alert("❌ Digite pelo menos uma quantidade (Caixa ou Garrafas)!");
 
             let btn = document.getElementById('btn-salvar-vas');
             btn.innerText = "Salvando Contagem... ⏳"; btn.disabled = true;
 
             let payload = {
-                acao: "salvar_vasilhame",
-                data_hora: document.getElementById('vas-data-hora').value,
-                usuario: uSel, local: local, vasilhame: vas, barril: b,
-                completas: cC, incompletas: cI, avulsas: av
+                acao: "salvar_vasilhame", data_hora: document.getElementById('vas-data-hora').value, usuario: uSel, local: local, vasilhame: vas, barril: b, completas: cC, incompletas: cI, avulsas: av
             };
 
             try {
@@ -295,39 +274,46 @@
                 if (res.sucesso) {
                     btn.style.background = "#10b981"; 
                     btn.innerText = "✅ " + res.msg;
-                    
                     document.getElementById('vas-vasilhame').value = '';
                     mudarCamposVasilhame(); 
                     gerarCabecalhoAutomatico();
-                    
                     setTimeout(() => { btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }, 2000);
                 } else { alert("❌ Erro: " + res.erro); btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }
             } catch(e) { alert("❌ Erro de conexão."); btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }
         }
 
+        async function sincronizarTxt() {
+            let btn = document.getElementById('btn-sync-txt');
+            btn.innerText = "Buscando e Sincronizando... ⏳"; btn.disabled = true;
+            try {
+                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({acao: "sincronizar_txt"}) });
+                let res = await req.json();
+                if (res.sucesso) {
+                    btn.style.background = "#10b981"; btn.innerText = "✅ " + res.msg;
+                    setTimeout(() => { btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false; }, 3000);
+                } else {
+                    alert("❌ Erro: " + res.erro);
+                    btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false;
+                }
+            } catch(e) { alert("❌ Erro de conexão."); btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false; }
+        }
+
         async function gerarPdfVasilhame() {
             let btn = document.getElementById('btn-gerar-pdf-vas');
-            btn.innerText = "Gerando PDF na Nuvem... ⏳"; btn.disabled = true;
+            btn.innerText = "Lendo bases e Gerando PDF... ⏳"; btn.disabled = true;
 
             try {
                 let uSel = document.getElementById('vas-usuario').value;
                 if(uSel === "NOVO") uSel = document.getElementById('vas-usuario-novo').value.trim();
                 
-                let req = await fetch(API_URL, { 
-                    method: 'POST', redirect: 'follow',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({acao: "gerar_pdf_vas", usuario: uSel}) 
-                });
+                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({acao: "gerar_pdf_vas", usuario: uSel}) });
                 let res = await req.json();
                 if (res.sucesso) {
-                    btn.style.background = "#10b981";
-                    btn.innerText = "✅ PDF Gerado com Sucesso!";
+                    btn.style.background = "#10b981"; btn.innerText = "✅ PDF Gerado com Sucesso!";
                     setTimeout(() => {
                         window.open(res.link, '_blank');
-                        btn.style.background = "";
-                        btn.innerText = "📄 Fechar Inventário e Gerar PDF";
-                        btn.disabled = false;
-                    }, 1000);
+                        btn.style.background = ""; btn.innerText = "📄 Fechar Inventário e Gerar PDF"; btn.disabled = false;
+                    }, 1500);
                 } else {
                     alert("❌ Erro: " + res.erro);
                     btn.style.background = ""; btn.innerText = "📄 Fechar Inventário e Gerar PDF"; btn.disabled = false;
