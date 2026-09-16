@@ -2,23 +2,40 @@
    SISTEMA DE ESTOQUE - JS FRONTEND
    ========================================================= */
 
-const API_URL = "URL_DO_SEU_WEB_APP_AQUI"; // ⚠️ COLOQUE O NOVO LINK AQUI
+// ⚠️ COLE O LINK DO NOVO WEB APP AQUI DENTRO DAS ASPAS:
+const API_URL = "https://script.google.com/macros/s/AKfycbwfl0et6zSe2Biqqc9SgjtU5eIJSMcuvR4r5zPUngbMovVf4xAeihRhUfS-FdQYK7gXFA/exec"; 
 
 window.onload = async function() {
     gerarCabecalhoAutomatico();
     
+    let inputProd = document.getElementById('val-produto');
+    inputProd.placeholder = "Carregando produtos... ⏳";
+    
     // Baixa a lista de produtos no carregamento inicial
     try {
-        let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ acao: 'buscar_produtos' }) });
+        let req = await fetch(API_URL, { 
+            method: 'POST', 
+            redirect: 'follow', // Ajuda a evitar bloqueios do Google
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ acao: 'buscar_produtos' }) 
+        });
+        
         let res = await req.json();
-        if(res.sucesso) {
+        
+        if(res.sucesso && res.produtos && res.produtos.length > 0) {
             let options = '';
             res.produtos.forEach(p => {
                 options += `<option value="${p.nome}">`;
             });
             document.getElementById('lista-produtos').innerHTML = options;
+            inputProd.placeholder = "Selecione ou digite o produto...";
+        } else {
+            inputProd.placeholder = "Nenhum produto cadastrado na aba";
         }
-    } catch(e) { console.log("Erro ao carregar produtos", e); }
+    } catch(e) { 
+        console.log("Erro ao carregar produtos:", e);
+        inputProd.placeholder = "⚠️ Erro: Coloque o Link (API_URL) no script.js";
+    }
 };
 
 function gerarCabecalhoAutomatico() {
@@ -96,7 +113,12 @@ async function salvarLancamento() {
     };
 
     try {
-        let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        let req = await fetch(API_URL, { 
+            method: 'POST', 
+            redirect: 'follow',
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload) 
+        });
         let res = await req.json();
         
         if (res.sucesso) {
@@ -123,7 +145,12 @@ async function gerarExcel() {
     btn.innerText = "Gerando Planilha... ⏳"; btn.disabled = true;
 
     try {
-        let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({acao: "gerar_excel"}) });
+        let req = await fetch(API_URL, { 
+            method: 'POST', 
+            redirect: 'follow',
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({acao: "gerar_excel"}) 
+        });
         let res = await req.json();
         if (res.sucesso) {
             alert("✅ Relatório Excel gerado na pasta do Drive!");
