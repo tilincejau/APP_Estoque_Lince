@@ -251,7 +251,8 @@
             if(caixas === "" && unidades === "") return alert("❌ Digite a quantidade de Caixas ou Unidades!");
 
             let btn = document.getElementById('btn-salvar');
-            btn.innerText = "Salvando na Base... ⏳"; btn.disabled = true;
+            btn.innerText = "Salvando na Base... ⏳"; 
+            btn.disabled = true;
 
             let payload = {
                 acao: "salvar_validade",
@@ -272,9 +273,7 @@
                 let res = await req.json();
                 
                 if (res.sucesso) {
-                    btn.style.background = "#10b981"; // Verde sucesso
-                    btn.innerText = "✅ " + res.msg;
-                    
+                    // 1. LIMPA A TELA INSTANTANEAMENTE
                     document.getElementById('val-produto').value = '';
                     document.getElementById('val-caixas').value = '';
                     document.getElementById('val-unidades').value = '';
@@ -285,49 +284,36 @@
                     document.getElementById('val-status').style.color = "#6b7280";
                     gerarCabecalhoAutomatico();
                     
-                    // CHAMA O EXCEL EM BACKGROUND MAS MOSTRANDO AO USUÁRIO
-                    setTimeout(async () => {
-                        btn.style.background = "#f59e0b"; // Amarelo progresso
-                        btn.innerText = "📊 Atualizando Excel no Drive... ⏳";
-                        
-                        try {
-                            let reqEx = await fetch(API_URL, { 
-                                method: 'POST', redirect: 'follow',
-                                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                                body: JSON.stringify({acao: "gerar_excel"}) 
-                            });
-                            let resEx = await reqEx.json();
-                            
-                            if(resEx.sucesso) {
-                                btn.style.background = "#10b981";
-                                btn.innerText = "✅ Planilha Excel Atualizada!";
-                            } else {
-                                btn.style.background = "#ef4444";
-                                btn.innerText = "⚠️ Erro: " + resEx.erro;
-                            }
-                        } catch(e) {
-                            btn.style.background = "#ef4444";
-                            btn.innerText = "⚠️ Erro de rede ao gerar Excel.";
-                        }
-                        
-                        // Restaura o botão após 3 segundos
-                        setTimeout(() => {
-                            btn.style.background = "";
-                            btn.innerText = "💾 Salvar Lançamento";
-                            btn.disabled = false;
-                        }, 3000);
-                        
+                    // 2. MENSAGEM RÁPIDA NO BOTÃO
+                    btn.style.background = "#10b981"; // Verde sucesso
+                    btn.innerText = "✅ " + res.msg;
+                    
+                    // 3. GERA O EXCEL NO FUNDO TOTALMENTE DESVINCULADO
+                    fetch(API_URL, { 
+                        method: 'POST', redirect: 'follow',
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({acao: "gerar_excel"}) 
+                    }).catch(e => console.log("Excel background fail", e));
+
+                    // 4. RESTAURA O BOTÃO EM 1,5s E FOCA NO PRODUTO PARA O PRÓXIMO LANÇAMENTO
+                    setTimeout(() => {
+                        btn.style.background = "";
+                        btn.innerText = "💾 Salvar Lançamento";
+                        btn.disabled = false;
+                        document.getElementById('val-produto').focus();
                     }, 1500);
 
                 } else {
                     alert("❌ Erro: " + res.erro);
                     btn.style.background = "";
-                    btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
+                    btn.innerText = "💾 Salvar Lançamento"; 
+                    btn.disabled = false;
                 }
             } catch(e) { 
                 alert("❌ Erro de conexão."); 
                 btn.style.background = "";
-                btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
+                btn.innerText = "💾 Salvar Lançamento"; 
+                btn.disabled = false;
             }
         }
     </script>
