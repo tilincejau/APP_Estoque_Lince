@@ -8,9 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* =========================================================
-           SISTEMA DE ESTOQUE - CSS MODERNO
-           ========================================================= */
         :root {
             --primary-color: #1a4d2e; --primary-light: #256b40;
             --bg-color: #f0f2f5; --card-bg: #ffffff;
@@ -39,7 +36,6 @@
         .card-titulo { font-size: 16px; color: var(--text-main); margin: 0 0 15px 0; padding-left: 10px; border-left: 4px solid var(--primary-color); display: inline-block; font-weight: 700; letter-spacing: -0.3px; }
         .info-label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; font-size: 13px;}
 
-        /* CARDS DO HISTÓRICO */
         .hist-card { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.1s; }
         .hist-card:active { transform: scale(0.98); }
         .hist-date { color: #1e40af; font-size: 16px; font-weight: 700; margin-bottom: 10px; }
@@ -47,18 +43,15 @@
         .hist-badge { background: #f3f4f6; border-radius: 8px; padding: 8px 12px; text-align: center; font-size: 10px; color: #6b7280; font-weight: 600; }
         .hist-badge-num { font-size: 15px; color: #1e40af; font-weight: 700; display: block; margin-top: 2px; }
 
-        /* LISTA DENTRO DO DIA */
         .hist-item { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .hist-item:active { background: #f9fafb; }
 
-        /* BOTÃO FLUTUANTE NO RODAPÉ */
         .btn-fixed-bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: #0ea5e9; color: white; border: none; border-radius: 30px; padding: 18px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); cursor: pointer; z-index: 1000; text-align: center; }
         .btn-fixed-bottom:active { background-color: #0284c7; transform: translateX(-50%) scale(0.98); }
     </style>
 </head>
 <body>
 
-    <!-- HOME -->
     <div id="tela-home" class="app-container">
         <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
         <h2 class="titulo-tela" style="font-size: 20px;">Controle de Estoque</h2>
@@ -67,7 +60,6 @@
         <button class="btn-principal" onclick="abrirHistorico('vasilhame')" style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);">🍾 Controle de Vasilhame</button>
     </div>
 
-    <!-- TELA HISTÓRICO -->
     <div id="tela-historico" class="app-container" style="display: none; padding-bottom: 100px;">
         <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-home')">⬅ Voltar</button>
         <h2 class="titulo-tela" style="font-size: 18px; text-transform: uppercase;" id="titulo-historico">HISTÓRICO</h2>
@@ -75,7 +67,6 @@
         <button class="btn-fixed-bottom" onclick="novaContagem()">Fazer nova contagem</button>
     </div>
 
-    <!-- TELA DETALHES DO DIA (RESUMO E EDIÇÃO) -->
     <div id="tela-dia" class="app-container" style="display: none; padding-bottom: 100px;">
         <button class="btn-secundario" id="btn-voltar-dia" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-historico')">⬅ Voltar</button>
         <h2 class="titulo-tela" style="font-size: 18px;" id="titulo-dia">Data: --/--/----</h2>
@@ -87,7 +78,6 @@
         <button class="btn-fixed-bottom" style="background-color: #f59e0b;" onclick="novoRegistroDia()">➕ Adicionar Lançamento</button>
     </div>
 
-    <!-- TELA FORMULÁRIO (NOVO/EDITAR) -->
     <div id="tela-form" class="app-container" style="display: none; padding-bottom: 50px;">
         <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-dia')">⬅ Cancelar</button>
         
@@ -102,11 +92,10 @@
             <label class="info-label" id="label-usuario" style="display:none;">Usuário Conferente: <span style="color:red">*</span></label>
             <select id="form-usuario" class="input-campo" style="display:none;">
                 <option value="">Selecione o Conferente...</option>
+                <!-- Removido o Conferente João conforme solicitado -->
                 <option value="MARIO CELSO DEVIDE">Mario Celso Devide</option>
-                <option value="CONFERENTE">CONFERENTE</option>
             </select>
 
-            <!-- Campos Vasilhame -->
             <div id="campos-vasilhame" style="display: none;">
                 <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
                 <select id="form-vasilhame" class="input-campo"></select>
@@ -132,7 +121,6 @@
                 </div>
             </div>
 
-            <!-- Campos Validade -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
                 <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
@@ -152,29 +140,18 @@
     </div>
 
     <script>
-        /* =========================================================
-           SISTEMA DE ESTOQUE - JS FRONTEND (BLINDADO)
-           ========================================================= */
-        const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; // ⚠️ COLOQUE AQUI O SEU LINK DE IMPLANTAÇÃO (EX: .../exec)
+        // ⚠️ INSIRA AQUI O SEU NOVO LINK (TERMINADO EM /exec)
+        const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; 
 
         let moduloAtivo = ""; let dataAtiva = ""; let registrosDoDiaAtivo = [];
 
-        // Função central para evitar bloqueios do Google (CORS/Redirect)
         async function chamarAPI(payload) {
-            let req = await fetch(API_URL, { 
-                method: 'POST', 
-                redirect: 'follow',
-                headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-                body: JSON.stringify(payload) 
-            });
-            
+            let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
             let textoResposta = await req.text();
-            
-            try {
-                return JSON.parse(textoResposta);
-            } catch (e) {
-                console.error("O Google não devolveu JSON. Ele devolveu:", textoResposta);
-                throw new Error("Acesso negado no Google Apps Script. Certifique-se de que a implantação está como 'Qualquer pessoa'.");
+            try { return JSON.parse(textoResposta); } 
+            catch (e) { 
+                console.error("Erro do Google. Texto devolvido:", textoResposta);
+                throw new Error("Acesso negado no Apps Script. A implantação deve estar como 'Qualquer pessoa'."); 
             }
         }
 
@@ -243,10 +220,7 @@
                 if(!resumo[nome]) resumo[nome] = { nome: nome, cx: 0, un: 0, completas: 0, contagem: 0 };
                 resumo[nome].contagem++;
                 if(moduloAtivo === 'vasilhame') {
-                    // Soma as caixas completas separadamente para multiplicar os vidros depois
                     resumo[nome].completas += parseInt(r.completas)||0;
-                    
-                    // Total Físico do recipiente Plástico/Metal:
                     resumo[nome].cx += (parseInt(r.completas)||0) + (parseInt(r.incompletas)||0) + (parseInt(r.barril)||0) + (parseInt(r.cilindros)||0);
                     resumo[nome].un += parseInt(r.avulsas)||0;
                 } else {
@@ -261,13 +235,10 @@
                 let badgeText = "";
                 
                 if(moduloAtivo === 'vasilhame') {
-                    let cap = 24;
-                    let nUp = r.nome.toUpperCase();
+                    let cap = 24; let nUp = r.nome.toUpperCase();
                     if(nUp.includes("1L")) cap = 12;
-                    // Barril, Cilindro e entrada direta na Garrafa não multiplicam 24
                     if(nUp.includes("CILINDRO") || nUp.includes("BARRIL") || nUp.includes("GARRAFA")) cap = 0; 
                     
-                    // Total exato de vidros baseados APENAS nas completas + avulsas 
                     let totalGf = (r.completas * cap) + r.un; 
                     badgeText = `${r.cx} CX | ${totalGf} GF`;
                 } else {
