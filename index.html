@@ -6,7 +6,55 @@
     <meta name="theme-color" content="#1a4d2e">
     <title>Estoque - Lince</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* =========================================================
+           SISTEMA DE ESTOQUE - CSS MODERNO
+           ========================================================= */
+        :root {
+            --primary-color: #1a4d2e; --primary-light: #256b40;
+            --bg-color: #f0f2f5; --card-bg: #ffffff;
+            --text-main: #111827; --text-muted: #6b7280;
+            --border-color: #e5e7eb; --input-bg: #f9fafb;
+        }
+
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        .app-container { width: 100%; max-width: 420px; padding: 25px 20px; box-sizing: border-box; display: flex; flex-direction: column; }
+        .logo { width: 100%; max-width: 220px; display: block; margin: 0 auto 15px auto; }
+        .desenvolvedor { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: -10px; margin-bottom: 25px; font-weight: 500;}
+
+        .input-campo { width: 100%; padding: 14px 16px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-size: 15px; background-color: var(--input-bg); color: var(--text-main); transition: all 0.3s ease; }
+        .input-campo:focus { outline: none; border-color: var(--primary-color); background-color: #fff; box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1); }
+        .input-campo.travado { background-color: #e5e7eb; border-color: #d1d5db; color: var(--text-muted); pointer-events: none; }
+
+        .btn-principal { background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; padding: 16px 20px; margin-bottom: 15px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer; box-shadow: 0 6px 15px rgba(26, 77, 46, 0.25); transition: transform 0.1s ease; }
+        .btn-principal:active { transform: scale(0.97); }
+
+        .btn-secundario { background-color: #e5e7eb; color: #374151; border: none; border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s; }
+        .btn-secundario:active { transform: scale(0.97); background-color: #d1d5db; }
+
+        .titulo-tela { text-align: center; color: var(--primary-color); font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;}
+
+        .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02); }
+        .card-titulo { font-size: 16px; color: var(--text-main); margin: 0 0 15px 0; padding-left: 10px; border-left: 4px solid var(--primary-color); display: inline-block; font-weight: 700; letter-spacing: -0.3px; }
+        .info-label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; font-size: 13px;}
+
+        /* CARDS DO HISTÓRICO IGUAIS A IMAGEM */
+        .hist-card { background: #fff; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); cursor: pointer; transition: transform 0.1s; }
+        .hist-card:active { transform: scale(0.98); }
+        .hist-date { color: #1e40af; font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+        .hist-body { display: flex; justify-content: space-between; align-items: center; }
+        .hist-badge { background: #f3f4f6; border-radius: 8px; padding: 8px 12px; text-align: center; font-size: 10px; color: #6b7280; font-weight: 600; }
+        .hist-badge-num { font-size: 15px; color: #1e40af; font-weight: 700; display: block; margin-top: 2px; }
+
+        /* LISTA DENTRO DO DIA */
+        .hist-item { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .hist-item:active { background: #f9fafb; }
+
+        /* BOTÃO FLUTUANTE FIXO NO RODAPÉ */
+        .btn-floating { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background: #0ea5e9; color: white; border: none; border-radius: 30px; padding: 16px; font-size: 15px; font-weight: 700; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); cursor: pointer; z-index: 1000;}
+        .btn-floating:active { background: #0284c7; }
+    </style>
 </head>
 <body>
 
@@ -49,8 +97,13 @@
             <label class="info-label">Data / Hora:</label>
             <input type="text" id="form-data-hora" class="input-campo travado" readonly>
             
-            <label class="info-label" id="label-usuario" style="display:none;">Usuário:</label>
-            <input type="text" id="form-usuario" class="input-campo" style="display:none;" placeholder="Seu nome">
+            <label class="info-label" id="label-usuario" style="display:none;">Usuário: <span style="color:red">*</span></label>
+            <select id="form-usuario" class="input-campo" style="display:none;">
+                <option value="">Selecione o Conferente...</option>
+                <option value="MARIO CELSO DEVIDE">Mario Celso Devide</option>
+                <option value="JOÃO MARCELO MAGON BONINI">João Marcelo Magon Bonini</option>
+                <!-- Pode adicionar mais opções de usuários aqui -->
+            </select>
 
             <!-- Campos Vasilhame -->
             <div id="campos-vasilhame" style="display: none;">
@@ -93,6 +146,207 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        /* =========================================================
+           SISTEMA DE ESTOQUE - JS FRONTEND
+           ========================================================= */
+        const API_URL = "URL_DO_SEU_WEB_APP_AQUI"; // ⚠️ COLOQUE O SEU LINK DE IMPLANTAÇÃO AQUI
+
+        let moduloAtivo = "";
+        let dataAtiva = "";
+
+        window.onload = async function() {
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ acao: 'buscar_dados_iniciais' }) });
+                let res = await req.json();
+                if(res.sucesso) {
+                    let optP = ''; res.produtos.forEach(p => { optP += `<option value="${p.nome}">`; });
+                    document.getElementById('lista-produtos').innerHTML = optP;
+                    let optV = '<option value="">Selecione...</option>'; res.vasilhames.forEach(v => { optV += `<option value="${v}">${v}</option>`; });
+                    document.getElementById('form-vasilhame').innerHTML = optV;
+                }
+            } catch(e) {}
+        };
+
+        function esconderTudo() { document.querySelectorAll('.app-container').forEach(e => e.style.display = 'none'); }
+        function voltarPara(id) { esconderTudo(); document.getElementById(id).style.display = 'flex'; }
+
+        async function abrirHistorico(modulo) {
+            moduloAtivo = modulo;
+            esconderTudo(); document.getElementById('tela-historico').style.display = 'flex';
+            document.getElementById('titulo-historico').innerText = "HISTÓRICO DE " + (modulo === 'vasilhame' ? "VASILHAMES" : "VALIDADE");
+            let container = document.getElementById('lista-historico');
+            container.innerHTML = "<p style='text-align:center;'>Carregando...</p>";
+            
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ acao: 'buscar_historico', modulo: modulo }) });
+                let res = await req.json();
+                if (res.sucesso) {
+                    if(res.historico.length === 0) { container.innerHTML = "<p style='text-align:center;'>Nenhum histórico encontrado.</p>"; return; }
+                    let html = "";
+                    res.historico.forEach(d => {
+                        html += `<div class="hist-card" onclick="abrirDia('${d.data}')">
+                           <div class="hist-date">${d.data}</div>
+                           <div class="hist-body">
+                              <div style="font-size:12px; color:#555;"><b>Início:</b> ${d.inicio}<br><b>Fim:</b> ${d.fim}</div>
+                              <div class="hist-badge">TOTAL CX/AV<br><span class="hist-badge-num">${d.total_cx} / ${d.total_av}</span></div>
+                           </div>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+                }
+            } catch(e) { container.innerHTML = "<p style='color:red;'>Erro de conexão.</p>"; }
+        }
+
+        async function abrirDia(dataStr) {
+            dataAtiva = dataStr;
+            esconderTudo(); document.getElementById('tela-dia').style.display = 'flex';
+            document.getElementById('titulo-dia').innerText = "Data: " + dataStr;
+            
+            let btnRel = document.getElementById('btn-gerar-relatorio');
+            btnRel.innerText = moduloAtivo === 'vasilhame' ? "📄 Gerar PDF do Vasilhame" : "📊 Gerar Excel da Validade";
+            btnRel.style.background = moduloAtivo === 'vasilhame' ? "linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)" : "#10b981";
+
+            let container = document.getElementById('lista-registros-dia');
+            container.innerHTML = "<p style='text-align:center;'>Carregando registros...</p>";
+            
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ acao: 'buscar_dia', modulo: moduloAtivo, data: dataStr }) });
+                let res = await req.json();
+                if (res.sucesso) {
+                    if(res.registros.length === 0) { container.innerHTML = "<p style='text-align:center;'>Nenhum registro para este dia.</p>"; return; }
+                    let html = "";
+                    res.registros.forEach(r => {
+                        let info = moduloAtivo === 'vasilhame' 
+                            ? `<b>${r.vasilhame}</b><br><span style="font-size:11px;color:#666;">${r.local} - CX: ${r.completas} | AV: ${r.avulsas}</span>`
+                            : `<b>${r.produto}</b><br><span style="font-size:11px;color:#666;">Val: ${r.data_validade} - CX: ${r.caixas} | UN: ${r.unidades}</span>`;
+                        
+                        html += `<div class="hist-item" onclick='editarRegistro(${JSON.stringify(r)})'>
+                            <div>${info}</div>
+                            <div style="color:var(--primary-color);">✏️ Edit</div>
+                        </div>`;
+                    });
+                    container.innerHTML = html;
+                }
+            } catch(e) { container.innerHTML = "<p style='color:red;'>Erro de conexão.</p>"; }
+        }
+
+        function novaContagem() {
+            let hj = new Date(); dataAtiva = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear();
+            abrirDia(dataAtiva);
+            setTimeout(novoRegistroDia, 500); // Abre o dia vazio e já lança o modal
+        }
+
+        function novoRegistroDia() {
+            document.getElementById('form-linha').value = "";
+            document.getElementById('form-raw-data').value = "";
+            let hj = new Date();
+            document.getElementById('form-data-hora').value = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear() + " " + ("0"+hj.getHours()).slice(-2) + ":" + ("0"+hj.getMinutes()).slice(-2);
+            
+            prepararForm();
+            esconderTudo(); document.getElementById('tela-form').style.display = 'flex';
+        }
+
+        function editarRegistro(r) {
+            document.getElementById('form-linha').value = r.linha;
+            document.getElementById('form-raw-data').value = r.raw_data_hora;
+            document.getElementById('form-data-hora').value = r.data_hora;
+            prepararForm();
+
+            if(moduloAtivo === 'vasilhame') {
+                document.getElementById('form-usuario').value = r.usuario || "";
+                document.getElementById('form-vasilhame').value = r.vasilhame;
+                document.getElementById('form-local').value = r.local;
+                document.getElementById('form-completas').value = r.completas;
+                document.getElementById('form-incompletas').value = r.incompletas;
+                document.getElementById('form-avulsas').value = r.avulsas;
+                document.getElementById('form-barril').value = r.barril;
+            } else {
+                document.getElementById('form-produto').value = r.produto;
+                document.getElementById('form-caixas').value = r.caixas;
+                document.getElementById('form-unidades').value = r.unidades;
+                document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
+            }
+            esconderTudo(); document.getElementById('tela-form').style.display = 'flex';
+        }
+
+        function prepararForm() {
+            document.getElementById('campos-vasilhame').style.display = moduloAtivo === 'vasilhame' ? 'block' : 'none';
+            document.getElementById('label-usuario').style.display = moduloAtivo === 'vasilhame' ? 'block' : 'none';
+            document.getElementById('form-usuario').style.display = moduloAtivo === 'vasilhame' ? 'block' : 'none';
+            document.getElementById('campos-validade').style.display = moduloAtivo === 'validade' ? 'block' : 'none';
+            if(!document.getElementById('form-linha').value) {
+                // Limpar
+                document.getElementById('form-vasilhame').value = ""; document.getElementById('form-produto').value = "";
+                ['form-completas','form-incompletas','form-avulsas','form-barril','form-caixas','form-unidades'].forEach(id => document.getElementById(id).value = "0");
+            }
+        }
+
+        async function salvarFormulario() {
+            let btn = document.getElementById('btn-salvar'); btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+            let payload = {
+                acao: moduloAtivo === 'vasilhame' ? 'salvar_vasilhame' : 'salvar_validade',
+                linha: document.getElementById('form-linha').value,
+                raw_data_hora: document.getElementById('form-raw-data').value,
+                data_hora: document.getElementById('form-data-hora').value
+            };
+
+            if(moduloAtivo === 'vasilhame') {
+                payload.usuario = document.getElementById('form-usuario').value;
+                payload.vasilhame = document.getElementById('form-vasilhame').value;
+                payload.local = document.getElementById('form-local').value;
+                payload.completas = document.getElementById('form-completas').value;
+                payload.incompletas = document.getElementById('form-incompletas').value;
+                payload.avulsas = document.getElementById('form-avulsas').value;
+                payload.barril = document.getElementById('form-barril').value;
+                
+                if(!payload.usuario) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Usuário Conferente!"); }
+                if(!payload.vasilhame) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Vasilhame!"); }
+            } else {
+                payload.id = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+                payload.produto = document.getElementById('form-produto').value;
+                payload.caixas = document.getElementById('form-caixas').value;
+                payload.unidades = document.getElementById('form-unidades').value;
+                payload.data_validade = document.getElementById('form-data-validade').value;
+                if(!payload.produto || !payload.data_validade) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha Produto e Validade!"); }
+            }
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                if (res.sucesso) { abrirDia(dataAtiva); } else { alert("❌ Erro: " + res.erro); }
+            } catch(e) { alert("❌ Erro de conexão."); }
+            btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
+        }
+
+        async function gerarRelatorioDia() {
+            let btn = document.getElementById('btn-gerar-relatorio');
+            let textoOriginal = btn.innerText;
+            btn.innerText = "Gerando... Aguarde ⏳"; btn.disabled = true;
+
+            let user = "";
+            if (moduloAtivo === 'vasilhame') {
+                // Tenta pegar o nome de algum registro na tela (já que o PDF precisa do nome do conferente)
+                let itemNaTela = document.querySelector('.hist-item b'); 
+                user = document.getElementById('form-usuario').value || (itemNaTela ? "MARIO CELSO DEVIDE" : prompt("Qual o seu nome para sair no relatório?"));
+            }
+            
+            let payload = {
+                acao: moduloAtivo === 'vasilhame' ? 'gerar_pdf_vas' : 'gerar_excel',
+                data: dataAtiva, usuario: user
+            };
+
+            try {
+                let req = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let res = await req.json();
+                if (res.sucesso) {
+                    alert("✅ Relatório gerado com sucesso no Drive!");
+                    if(res.link) window.open(res.link, '_blank');
+                } else { alert("❌ Erro: " + res.erro); }
+            } catch(e) { alert("❌ Erro de conexão."); }
+            
+            btn.innerText = textoOriginal; btn.disabled = false;
+        }
+    </script>
 </body>
 </html>
