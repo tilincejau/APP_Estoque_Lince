@@ -5,321 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a4d2e">
     <title>Estoque - Lince</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
-        :root { --primary-color: #1a4d2e; --primary-light: #256b40; --bg-color: #f0f2f5; --card-bg: #ffffff; --text-main: #111827; --text-muted: #6b7280; --border-color: #e5e7eb; --input-bg: #f9fafb; }
-        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-color); display: flex; flex-direction: column; align-items: center; color: var(--text-main); -webkit-font-smoothing: antialiased; }
-        .app-container { width: 100%; max-width: 420px; padding: 25px 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-        .logo { width: 100%; max-width: 220px; display: block; margin: 0 auto 15px auto; }
-        .desenvolvedor { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: -10px; margin-bottom: 25px; font-weight: 500;}
-        .input-campo { width: 100%; padding: 14px 16px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: 12px; box-sizing: border-box; font-size: 15px; font-family: 'Inter', sans-serif; background-color: var(--input-bg); color: var(--text-main); transition: all 0.3s ease; }
-        .input-campo:focus { outline: none; border-color: var(--primary-color); background-color: #fff; box-shadow: 0 0 0 4px rgba(26, 77, 46, 0.1); }
-        .input-campo.travado { background-color: #e5e7eb; border-color: #d1d5db; color: var(--text-muted); pointer-events: none; font-weight: 600; text-align: center; }
-        .btn-principal { background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%); color: white; border: none; border-radius: 14px; padding: 16px 20px; margin-bottom: 15px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer; box-shadow: 0 6px 15px rgba(26, 77, 46, 0.25); transition: transform 0.1s ease, box-shadow 0.2s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.3px; }
-        .btn-principal:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(26, 77, 46, 0.2); }
-        .btn-secundario { background-color: #e5e7eb; color: #374151; border: none; border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
-        .btn-secundario:active { transform: scale(0.97); background-color: #d1d5db; }
-        .titulo-tela { text-align: center; color: var(--primary-color); font-size: 22px; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.5px;}
-        .card { background-color: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.02); }
-        .card-titulo { font-size: 16px; color: var(--text-main); margin: 0 0 15px 0; padding-left: 10px; border-left: 4px solid var(--primary-color); display: inline-block; font-weight: 700; letter-spacing: -0.3px; }
-        .info-label { font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; font-size: 13px;}
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <!-- HOME -->
     <div id="tela-home" class="app-container">
         <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
         <h2 class="titulo-tela" style="font-size: 20px;">Controle de Estoque</h2>
         <div class="desenvolvedor">Desenvolvido por João Marcelo Magon Bonini</div>
-        
-        <button class="btn-principal" onclick="abrirModulo('validade')">📦 Controle de Validade</button>
-        <button class="btn-principal" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); box-shadow: 0 6px 15px rgba(30, 58, 138, 0.25);" onclick="abrirModulo('vasilhame')">🍾 Controle de Vasilhame</button>
+        <button class="btn-principal" onclick="abrirHistorico('validade')">📦 Controle de Validade</button>
+        <button class="btn-principal" onclick="abrirHistorico('vasilhame')" style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);">🍾 Controle de Vasilhame</button>
     </div>
 
-    <!-- TELA VALIDADE -->
-    <div id="tela-validade" class="app-container" style="display: none;">
-        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo" style="max-width: 150px;">
-        <button class="btn-secundario" style="margin-bottom: 15px; padding: 10px;" onclick="voltarHome()">⬅ Voltar</button>
-        
-        <div class="card">
-            <h3 class="card-titulo">📝 Novo Lançamento</h3>
-            <label class="info-label">ID do Lançamento:</label><input type="text" id="val-id" class="input-campo travado" readonly>
-            <label class="info-label">Data / Hora:</label><input type="text" id="val-data-hora" class="input-campo travado" readonly>
-            <label class="info-label">Produto: <span style="color:red">*</span></label><input type="text" id="val-produto" class="input-campo" list="lista-produtos" placeholder="Carregando produtos... ⏳">
-            <datalist id="lista-produtos"></datalist>
-
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1;"><label class="info-label">Qtd. Caixas:</label><input type="number" id="val-caixas" class="input-campo" placeholder="Ex: 5"></div>
-                <div style="flex:1;"><label class="info-label">Qtd. Unidades:</label><input type="number" id="val-unidades" class="input-campo" placeholder="Ex: 12"></div>
-            </div>
-
-            <label class="info-label">Data de Validade: <span style="color:red">*</span></label><input type="date" id="val-data-validade" class="input-campo" onchange="calcularDiasRestantes()">
-
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <div style="flex: 1;"><label class="info-label">Dias Restantes:</label><input type="text" id="val-dias" class="input-campo travado" style="font-size: 18px;" readonly></div>
-                <div style="flex: 2;"><label class="info-label">Status:</label><input type="text" id="val-status" class="input-campo travado" readonly></div>
-            </div>
-
-            <button class="btn-principal" id="btn-salvar" style="margin-bottom: 5px; margin-top: 10px;" onclick="salvarLancamentoVal()">💾 Salvar Lançamento</button>
-        </div>
+    <!-- TELA HISTÓRICO -->
+    <div id="tela-historico" class="app-container" style="display: none; padding-bottom: 80px;">
+        <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-home')">⬅ Voltar</button>
+        <h2 class="titulo-tela" style="font-size: 18px; text-transform: uppercase;" id="titulo-historico">HISTÓRICO</h2>
+        <div id="lista-historico"></div>
+        <button class="btn-floating" id="btn-nova-contagem" onclick="novaContagem()">Fazer nova contagem</button>
     </div>
 
-    <!-- TELA VASILHAME -->
-    <div id="tela-vasilhame" class="app-container" style="display: none;">
-        <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" class="logo" style="max-width: 150px;">
-        <button class="btn-secundario" style="margin-bottom: 15px; padding: 10px;" onclick="voltarHome()">⬅ Voltar</button>
+    <!-- TELA DETALHES DO DIA -->
+    <div id="tela-dia" class="app-container" style="display: none; padding-bottom: 80px;">
+        <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-historico')">⬅ Voltar</button>
+        <h2 class="titulo-tela" style="font-size: 18px;" id="titulo-dia">Data: --/--/----</h2>
+        <div id="lista-registros-dia"></div>
         
-        <div class="card" style="border: 1.5px solid #1e3a8a;">
-            <h3 class="card-titulo" style="color: #1e3a8a; border-left-color: #1e3a8a;">🍾 Contagem de Vasilhame</h3>
+        <button class="btn-principal" style="background: #10b981; margin-top: 15px;" id="btn-gerar-relatorio" onclick="gerarRelatorioDia()">📊 Gerar Relatório Deste Dia</button>
+        <button class="btn-floating" onclick="novoRegistroDia()">Adicionar Item</button>
+    </div>
+
+    <!-- TELA FORMULÁRIO (UNIFICADO PARA NOVO/EDITAR) -->
+    <div id="tela-form" class="app-container" style="display: none;">
+        <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-dia')">⬅ Cancelar</button>
+        
+        <div class="card" id="form-container">
+            <h3 class="card-titulo" id="titulo-form">📝 Lançamento</h3>
+            <input type="hidden" id="form-linha">
+            <input type="hidden" id="form-raw-data">
             
             <label class="info-label">Data / Hora:</label>
-            <input type="text" id="vas-data-hora" class="input-campo travado" readonly>
+            <input type="text" id="form-data-hora" class="input-campo travado" readonly>
+            
+            <label class="info-label" id="label-usuario" style="display:none;">Usuário:</label>
+            <input type="text" id="form-usuario" class="input-campo" style="display:none;" placeholder="Seu nome">
 
-            <label class="info-label">Usuário: <span style="color:red">*</span></label>
-            <select id="vas-usuario" class="input-campo" onchange="verificarNovoUsuarioVas(this)">
-                <option value="Mario Celso Devide" selected>Mario Celso Devide</option>
-                <option value="NOVO" style="font-weight:bold; color:var(--primary-color);">➕ OUTRO (Adicionar Novo)</option>
-            </select>
-            <input type="text" id="vas-usuario-novo" class="input-campo" placeholder="Nome do novo colaborador..." style="display:none; margin-top:-10px; border: 2px dashed #1e3a8a; font-weight: 700;">
+            <!-- Campos Vasilhame -->
+            <div id="campos-vasilhame" style="display: none;">
+                <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
+                <select id="form-vasilhame" class="input-campo"></select>
 
-            <label class="info-label">Local da Contagem: <span style="color:red">*</span></label>
-            <select id="vas-local" class="input-campo">
-                <option value="">Selecione...</option>
-                <option value="Depósito">Depósito</option>
-                <option value="Entrega">Entrega</option>
-                <option value="Carreta">Carreta</option>
-            </select>
+                <label class="info-label">Local da Contagem: <span style="color:red">*</span></label>
+                <select id="form-local" class="input-campo">
+                    <option value="DEPÓSITO">Depósito</option>
+                    <option value="ENTREGA">Entrega</option>
+                    <option value="CARRETA">Carreta</option>
+                </select>
 
-            <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
-            <select id="vas-vasilhame" class="input-campo" onchange="mudarCamposVasilhame()">
-                <option value="">Carregando vasilhames... ⏳</option>
-            </select>
-
-            <div id="div-vas-barril" style="display:none; background: #fef3c7; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1.5px dashed #f59e0b;">
-                <label class="info-label" style="color: #b45309;">Qtd. Barril:</label>
-                <input type="number" id="vas-barril" class="input-campo" placeholder="Ex: 5" style="margin-bottom:0; background: #fff;">
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex:1;"><label class="info-label">CX Completas:</label><input type="number" id="form-completas" class="input-campo" value="0"></div>
+                    <div style="flex:1;"><label class="info-label">GF Avulsas:</label><input type="number" id="form-avulsas" class="input-campo" value="0"></div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex:1;"><label class="info-label">CX Incompletas:</label><input type="number" id="form-incompletas" class="input-campo" value="0"></div>
+                    <div style="flex:1;"><label class="info-label">Barril:</label><input type="number" id="form-barril" class="input-campo" value="0"></div>
+                </div>
             </div>
 
-            <div id="div-vas-caixas" style="display:none; background: #eff6ff; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1.5px dashed #3b82f6;">
-                <label class="info-label" style="color: #1d4ed8;">Caixas Completas (C/ Garrafas):</label>
-                <input type="number" id="vas-caixas-comp" class="input-campo" placeholder="Ex: 10" style="background: #fff;">
-                
-                <label class="info-label" style="color: #1d4ed8;">Caixas Incompletas (Vazias):</label>
-                <input type="number" id="vas-caixas-inc" class="input-campo" placeholder="Ex: 2" style="background: #fff;">
-                
-                <label class="info-label" style="color: #1d4ed8;">Garrafas Avulsas:</label>
-                <input type="number" id="vas-garrafas" class="input-campo" placeholder="Ex: 30 (Vira 1 cx e 6 avulsas)" style="margin-bottom:0; background: #fff;">
+            <!-- Campos Validade -->
+            <div id="campos-validade" style="display: none;">
+                <label class="info-label">Produto: <span style="color:red">*</span></label>
+                <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
+                <datalist id="lista-produtos"></datalist>
+
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex:1;"><label class="info-label">Qtd. Caixas:</label><input type="number" id="form-caixas" class="input-campo" value="0"></div>
+                    <div style="flex:1;"><label class="info-label">Qtd. Unidades:</label><input type="number" id="form-unidades" class="input-campo" value="0"></div>
+                </div>
+
+                <label class="info-label">Data de Validade: <span style="color:red">*</span></label>
+                <input type="date" id="form-data-validade" class="input-campo">
             </div>
 
-            <button class="btn-principal" id="btn-salvar-vas" style="margin-bottom: 5px; margin-top: 10px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); box-shadow: 0 6px 15px rgba(30, 58, 138, 0.25);" onclick="salvarVasilhame()">💾 Salvar Contagem</button>
-            
-            <hr style="border: 1px dashed var(--border-color); margin: 20px 0;">
-            <p style="font-size: 12px; color: var(--text-muted); text-align: center; font-weight: 600;">Fechamento de Final de Dia</p>
-            
-            <button class="btn-secundario" id="btn-sync-txt" style="background-color: #4f46e5; color: white; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); margin-bottom: 10px;" onclick="sincronizarTxt()">📥 Puxar Arquivos TXT da Pasta</button>
-            
-            <button class="btn-secundario" id="btn-gerar-pdf-vas" style="background-color: #b30000; color: white; border: none; box-shadow: 0 4px 10px rgba(179, 0, 0, 0.3);" onclick="gerarPdfVasilhame()">📄 Fechar Inventário e Gerar PDF</button>
+            <button class="btn-principal" id="btn-salvar" onclick="salvarFormulario()">💾 Salvar Lançamento</button>
         </div>
     </div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; 
-
-        window.onload = async function() {
-            gerarCabecalhoAutomatico();
-            let inputProd = document.getElementById('val-produto');
-            let selVas = document.getElementById('vas-vasilhame');
-            inputProd.placeholder = "Carregando sistema... ⏳";
-            
-            inputProd.addEventListener('focus', function() { this.dataset.oldValue = this.value; this.value = ''; });
-            inputProd.addEventListener('blur', function() { if (this.value.trim() === '') this.value = this.dataset.oldValue || ''; });
-
-            try {
-                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ acao: 'buscar_dados_iniciais' }) });
-                let res = await req.json();
-                if(res.sucesso) {
-                    let optProd = ''; res.produtos.forEach(p => { optProd += `<option value="${p.nome}">`; });
-                    document.getElementById('lista-produtos').innerHTML = optProd;
-                    inputProd.placeholder = "Selecione ou digite o produto...";
-                    let optVas = '<option value="">Selecione o Vasilhame...</option>';
-                    res.vasilhames.forEach(v => { optVas += `<option value="${v}">${v}</option>`; });
-                    selVas.innerHTML = optVas;
-                }
-            } catch(e) { 
-                inputProd.placeholder = "⚠️ Erro: Salve o script e faça a Implantação.";
-                selVas.innerHTML = `<option value="">⚠️ Erro de Rede</option>`;
-            }
-        };
-
-        function gerarCabecalhoAutomatico() {
-            let idUnico = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase();
-            if(document.getElementById('val-id')) document.getElementById('val-id').value = idUnico;
-            let hj = new Date();
-            let formatada = ("0"+hj.getDate()).slice(-2) + "/" + ("0"+(hj.getMonth()+1)).slice(-2) + "/" + hj.getFullYear() + " " + ("0"+hj.getHours()).slice(-2) + ":" + ("0"+hj.getMinutes()).slice(-2);
-            if(document.getElementById('val-data-hora')) document.getElementById('val-data-hora').value = formatada;
-            if(document.getElementById('vas-data-hora')) document.getElementById('vas-data-hora').value = formatada;
-        }
-
-        function abrirModulo(modulo) {
-            document.getElementById('tela-home').style.display = 'none';
-            gerarCabecalhoAutomatico();
-            if(modulo === 'validade') { document.getElementById('tela-validade').style.display = 'flex'; } 
-            else if(modulo === 'vasilhame') { document.getElementById('tela-vasilhame').style.display = 'flex'; }
-        }
-
-        function voltarHome() {
-            document.getElementById('tela-validade').style.display = 'none';
-            document.getElementById('tela-vasilhame').style.display = 'none';
-            document.getElementById('tela-home').style.display = 'flex';
-        }
-
-        function calcularDiasRestantes() {
-            let dt = document.getElementById('val-data-validade').value;
-            if(!dt) return;
-            let valDate = new Date(dt + "T00:00:00");
-            let hoje = new Date(); hoje.setHours(0,0,0,0);
-            let diff = Math.ceil((valDate - hoje) / (1000 * 3600 * 24));
-            document.getElementById('val-dias').value = diff;
-            let statusEl = document.getElementById('val-status');
-            if (diff <= 45) { statusEl.value = "VALIDADE CURTA"; statusEl.style.backgroundColor = "#fee2e2"; statusEl.style.color = "#dc2626"; } 
-            else if (diff < 60) { statusEl.value = "ATENÇÃO"; statusEl.style.backgroundColor = "#fef3c7"; statusEl.style.color = "#d97706"; } 
-            else { statusEl.value = "OK"; statusEl.style.backgroundColor = "#d1fae5"; statusEl.style.color = "#059669"; }
-        }
-
-        async function salvarLancamentoVal() {
-            let produto = document.getElementById('val-produto').value;
-            let caixas = document.getElementById('val-caixas').value;
-            let unidades = document.getElementById('val-unidades').value;
-            let dataVal = document.getElementById('val-data-validade').value;
-            
-            if(!produto || !dataVal) return alert("❌ Preencha o Produto e a Data de Validade!");
-            if(caixas === "" && unidades === "") return alert("❌ Digite a quantidade de Caixas ou Unidades!");
-
-            let btn = document.getElementById('btn-salvar');
-            btn.innerText = "Salvando na Base... ⏳"; btn.disabled = true;
-
-            let payload = { acao: "salvar_validade", id: document.getElementById('val-id').value, data_hora: document.getElementById('val-data-hora').value, produto: produto, caixas: caixas, unidades: unidades, data_validade: dataVal };
-
-            try {
-                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-                let res = await req.json();
-                
-                if (res.sucesso) {
-                    btn.style.background = "#10b981"; btn.innerText = "✅ " + res.msg;
-                    document.getElementById('val-produto').value = ''; document.getElementById('val-caixas').value = ''; document.getElementById('val-unidades').value = ''; document.getElementById('val-data-validade').value = ''; document.getElementById('val-dias').value = ''; document.getElementById('val-status').value = ''; document.getElementById('val-status').style.backgroundColor = "#e5e7eb"; document.getElementById('val-status').style.color = "#6b7280";
-                    gerarCabecalhoAutomatico();
-                    
-                    fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({acao: "gerar_excel"}) }).catch(e => console.log(e));
-
-                    setTimeout(() => { btn.style.background = ""; btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; document.getElementById('val-produto').focus(); }, 1800);
-                } else { alert("❌ Erro: " + res.erro); btn.style.background = ""; btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; }
-            } catch(e) { alert("❌ Erro de conexão."); btn.style.background = ""; btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; }
-        }
-
-        function verificarNovoUsuarioVas(sel) {
-            let inNovo = document.getElementById('vas-usuario-novo');
-            if(sel.value === "NOVO") { inNovo.style.display = "block"; inNovo.focus(); }
-            else { inNovo.style.display = "none"; inNovo.value = ""; }
-        }
-
-        function mudarCamposVasilhame() {
-            let vas = document.getElementById('vas-vasilhame').value.toUpperCase();
-            let divBar = document.getElementById('div-vas-barril');
-            let divCx = document.getElementById('div-vas-caixas');
-            
-            document.getElementById('vas-barril').value = '';
-            document.getElementById('vas-caixas-comp').value = '';
-            document.getElementById('vas-caixas-inc').value = '';
-            document.getElementById('vas-garrafas').value = '';
-
-            if(vas.includes("BARRIL") || vas.includes("CILINDRO")) {
-                divBar.style.display = 'block'; divCx.style.display = 'none';
-            } else if(vas.includes("CAIXA") || vas.includes("ENGRA") || vas.includes("GARRAFA")) {
-                divBar.style.display = 'none'; divCx.style.display = 'block';
-            } else {
-                divBar.style.display = 'none'; divCx.style.display = 'none';
-            }
-        }
-
-        async function salvarVasilhame() {
-            let uSel = document.getElementById('vas-usuario').value;
-            if(uSel === "NOVO") { uSel = document.getElementById('vas-usuario-novo').value.trim(); if(!uSel) return alert("❌ Digite o nome do novo colaborador!"); }
-            
-            let local = document.getElementById('vas-local').value;
-            let vas = document.getElementById('vas-vasilhame').value;
-            if(!local || !vas) return alert("❌ Selecione o Local e o Vasilhame Padrão!");
-
-            let b = document.getElementById('vas-barril').value;
-            let cC = document.getElementById('vas-caixas-comp').value;
-            let cI = document.getElementById('vas-caixas-inc').value;
-            let av = document.getElementById('vas-garrafas').value;
-
-            if((vas.toUpperCase().includes("BARRIL") || vas.toUpperCase().includes("CILINDRO")) && b === "") return alert("❌ Digite a Qtd. de Barris!");
-            if((vas.toUpperCase().includes("CAIXA") || vas.toUpperCase().includes("GARRAFA")) && cC === "" && cI === "" && av === "") return alert("❌ Digite pelo menos uma quantidade (Caixa ou Garrafas)!");
-
-            let btn = document.getElementById('btn-salvar-vas');
-            btn.innerText = "Salvando Contagem... ⏳"; btn.disabled = true;
-
-            let payload = {
-                acao: "salvar_vasilhame", data_hora: document.getElementById('vas-data-hora').value, usuario: uSel, local: local, vasilhame: vas, barril: b, completas: cC, incompletas: cI, avulsas: av
-            };
-
-            try {
-                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-                let res = await req.json();
-                
-                if (res.sucesso) {
-                    btn.style.background = "#10b981"; 
-                    btn.innerText = "✅ " + res.msg;
-                    document.getElementById('vas-vasilhame').value = '';
-                    mudarCamposVasilhame(); 
-                    gerarCabecalhoAutomatico();
-                    setTimeout(() => { btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }, 2000);
-                } else { alert("❌ Erro: " + res.erro); btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }
-            } catch(e) { alert("❌ Erro de conexão."); btn.style.background = ""; btn.innerText = "💾 Salvar Contagem"; btn.disabled = false; }
-        }
-
-        async function sincronizarTxt() {
-            let btn = document.getElementById('btn-sync-txt');
-            btn.innerText = "Buscando e Sincronizando... ⏳"; btn.disabled = true;
-            try {
-                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({acao: "sincronizar_txt"}) });
-                let res = await req.json();
-                if (res.sucesso) {
-                    btn.style.background = "#10b981"; btn.innerText = "✅ " + res.msg;
-                    setTimeout(() => { btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false; }, 3000);
-                } else {
-                    alert("❌ Erro: " + res.erro);
-                    btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false;
-                }
-            } catch(e) { alert("❌ Erro de conexão."); btn.style.background = "#4f46e5"; btn.innerText = "📥 Puxar Arquivos TXT da Pasta"; btn.disabled = false; }
-        }
-
-        async function gerarPdfVasilhame() {
-            let btn = document.getElementById('btn-gerar-pdf-vas');
-            btn.innerText = "Lendo bases e Gerando PDF... ⏳"; btn.disabled = true;
-
-            try {
-                let uSel = document.getElementById('vas-usuario').value;
-                if(uSel === "NOVO") uSel = document.getElementById('vas-usuario-novo').value.trim();
-                
-                let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({acao: "gerar_pdf_vas", usuario: uSel}) });
-                let res = await req.json();
-                if (res.sucesso) {
-                    btn.style.background = "#10b981"; btn.innerText = "✅ PDF Gerado com Sucesso!";
-                    setTimeout(() => {
-                        window.open(res.link, '_blank');
-                        btn.style.background = ""; btn.innerText = "📄 Fechar Inventário e Gerar PDF"; btn.disabled = false;
-                    }, 1500);
-                } else {
-                    alert("❌ Erro: " + res.erro);
-                    btn.style.background = ""; btn.innerText = "📄 Fechar Inventário e Gerar PDF"; btn.disabled = false;
-                }
-            } catch(e) { alert("❌ Erro de conexão."); btn.style.background = ""; btn.innerText = "📄 Fechar Inventário e Gerar PDF"; btn.disabled = false; }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
