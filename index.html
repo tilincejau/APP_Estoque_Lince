@@ -56,8 +56,11 @@
         <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
         <h2 class="titulo-tela" style="font-size: 20px;">Controle de Estoque</h2>
         <div class="desenvolvedor">Desenvolvido por João Marcelo Magon Bonini</div>
+        
         <button class="btn-principal" onclick="abrirHistorico('validade')">📦 Controle de Validade</button>
         <button class="btn-principal" onclick="abrirHistorico('vasilhame')" style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);">🍾 Controle de Vasilhame</button>
+        
+        <button class="btn-secundario" style="margin-top: 20px; border: 1.5px dashed var(--primary-color); color: var(--primary-color); background: transparent;" onclick="sincronizarTXT()" id="btn-sync-txt">🔄 Sincronizar Base TXT</button>
     </div>
 
     <div id="tela-historico" class="app-container" style="display: none; padding-bottom: 100px;">
@@ -135,7 +138,7 @@
                 <label class="info-label">Data de Validade: <span style="color:red">*</span></label>
                 <input type="date" id="form-data-validade" class="input-campo" onchange="calcularDiasRestantes()">
 
-                <!-- ADICIONADO: DIAS RESTANTES E STATUS VISUAL -->
+                <!-- DIAS RESTANTES E STATUS VISUAL -->
                 <div style="display: flex; gap: 10px; margin-top: 5px;">
                     <div style="flex: 1;">
                         <label class="info-label">Dias Restantes:</label>
@@ -310,7 +313,7 @@
                 document.getElementById('form-barril').value = r.barril; document.getElementById('form-cilindros').value = r.cilindros || 0;
             } else {
                 document.getElementById('form-produto').value = r.produto; document.getElementById('form-caixas').value = r.caixas; document.getElementById('form-unidades').value = r.unidades; document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
-                calcularDiasRestantes(); // Pinta o status assim que entra na edição
+                calcularDiasRestantes(); 
             }
             esconderTudo(); document.getElementById('tela-form').style.display = 'flex';
         }
@@ -397,6 +400,27 @@
                 if (res.sucesso) { alert("✅ Relatório gerado com sucesso no Drive!"); if(res.link) window.open(res.link, '_blank'); } else { alert("❌ Erro: " + res.erro); }
             } catch(e) { alert("❌ Erro de conexão."); }
             btn.innerText = textoOriginal; btn.disabled = false;
+        }
+
+        async function sincronizarTXT() {
+            let btn = document.getElementById('btn-sync-txt');
+            let textoOriginal = btn.innerText;
+            btn.innerText = "Lendo arquivos TXT... ⏳";
+            btn.disabled = true;
+
+            try {
+                let res = await chamarAPI({ acao: 'sincronizar_txt' });
+                if (res.sucesso) {
+                    alert("✅ " + res.msg);
+                } else {
+                    alert("❌ Erro: " + res.erro);
+                }
+            } catch(e) {
+                alert("❌ Erro de conexão.");
+            }
+            
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
         }
     </script>
 </body>
