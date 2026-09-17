@@ -69,7 +69,7 @@
         <button class="btn-fixed-bottom" onclick="novaContagem()">Fazer nova contagem</button>
     </div>
 
-    <!-- TELA DETALHES DO DIA -->
+    <!-- TELA DETALHES DO DIA (RESUMO E EDIÇÃO) -->
     <div id="tela-dia" class="app-container" style="display: none; padding-bottom: 100px;">
         <button class="btn-secundario" id="btn-voltar-dia" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-historico')">⬅ Voltar</button>
         <h2 class="titulo-tela" style="font-size: 18px;" id="titulo-dia">Data: --/--/----</h2>
@@ -78,10 +78,10 @@
         <div id="lista-detalhes-dia" style="display: none;"></div>
         
         <button class="btn-principal" style="background: #10b981; margin-top: 15px;" id="btn-gerar-relatorio" onclick="gerarRelatorioDia()">📊 Gerar Relatório Deste Dia</button>
-        <button class="btn-fixed-bottom" style="background-color: #f59e0b;" onclick="novoRegistroDia()">➕ Adicionar Lançamento</button>
+        <button class="btn-fixed-bottom" style="background-color: #f59e0b;" onclick="novoRegistroDia()">➕ Novo Lançamento</button>
     </div>
 
-    <!-- TELA FORMULÁRIO -->
+    <!-- TELA FORMULÁRIO (NOVO/EDITAR) -->
     <div id="tela-form" class="app-container" style="display: none; padding-bottom: 50px;">
         <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-dia')">⬅ Cancelar</button>
         
@@ -100,6 +100,7 @@
                 <option value="JOÃO MARCELO MAGON BONINI">João Marcelo Magon Bonini</option>
             </select>
 
+            <!-- Campos Vasilhame -->
             <div id="campos-vasilhame" style="display: none;">
                 <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
                 <select id="form-vasilhame" class="input-campo"></select>
@@ -119,13 +120,13 @@
                     <div style="flex:1;"><label class="info-label">CX Incompletas:</label><input type="number" id="form-incompletas" class="input-campo" value="0"></div>
                     <div style="flex:1;"><label class="info-label">Barril:</label><input type="number" id="form-barril" class="input-campo" value="0"></div>
                 </div>
-                <!-- NOVO CAMPO CILINDROS -->
                 <div style="display: flex; gap: 8px;">
                     <div style="flex:1;"><label class="info-label">Cilindros:</label><input type="number" id="form-cilindros" class="input-campo" value="0"></div>
                     <div style="flex:1;"></div>
                 </div>
             </div>
 
+            <!-- Campos Validade -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
                 <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
@@ -145,7 +146,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec";
+        const API_URL = "URL_DO_SEU_WEB_APP_AQUI"; // ⚠️ COLOQUE AQUI O SEU LINK DE IMPLANTAÇÃO (EX: .../exec)
 
         let moduloAtivo = ""; let dataAtiva = ""; let registrosDoDiaAtivo = [];
 
@@ -216,11 +217,14 @@
             let resumo = {};
             registrosDoDiaAtivo.forEach(r => {
                 let nome = moduloAtivo === 'vasilhame' ? r.vasilhame : r.produto;
-                if(!resumo[nome]) resumo[nome] = { nome: nome, cx: 0, un: 0, contagem: 0 };
+                if(!resumo[nome]) resumo[nome] = { nome: nome, cx: 0, un: 0, completas: 0, contagem: 0 };
                 resumo[nome].contagem++;
                 if(moduloAtivo === 'vasilhame') {
-                    // CILINDROS e BARRIS também são exibidos como CX no resumo visual para facilitar a vida do usuário
-                    resumo[nome].cx += (parseInt(r.completas)||0) + (parseInt(r.barril)||0) + (parseInt(r.cilindros)||0);
+                    // Soma as caixas completas a parte para multiplicar os vidros depois
+                    resumo[nome].completas += parseInt(r.completas)||0;
+                    
+                    // Total Físico do recipiente Plástico/Metal:
+                    resumo[nome].cx += (parseInt(r.completas)||0) + (parseInt(r.incompletas)||0) + (parseInt(r.barril)||0) + (parseInt(r.cilindros)||0);
                     resumo[nome].un += parseInt(r.avulsas)||0;
                 } else {
                     resumo[nome].cx += parseInt(r.caixas)||0;
@@ -237,9 +241,11 @@
                     let cap = 24;
                     let nUp = r.nome.toUpperCase();
                     if(nUp.includes("1L")) cap = 12;
-                    if(nUp.includes("CILINDRO") || nUp.includes("BARRIL")) cap = 0; // Barris e Cilindros não geram garrafas avulsas virtuais
+                    // Barril, Cilindro e entrada direta na Garrafa não multiplicam 24
+                    if(nUp.includes("CILINDRO") || nUp.includes("BARRIL") || nUp.includes("GARRAFA")) cap = 0; 
                     
-                    let totalGf = (r.cx * cap) + r.un;
+                    // Total exato de vidros baseados APENAS nas completas + avulsas 
+                    let totalGf = (r.completas * cap) + r.un; 
                     badgeText = `${r.cx} CX | ${totalGf} GF`;
                 } else {
                     badgeText = `${r.cx} CX | ${r.un} UN`;
@@ -268,7 +274,7 @@
             
             filtrados.forEach(r => {
                 let info = moduloAtivo === 'vasilhame' 
-                    ? `<b>Hora: ${r.data_hora.split(' ')[1]}</b> - ${r.local}<br><span style="font-size:12px;color:#666;">CX: ${r.completas} | AV: ${r.avulsas} | User: ${r.usuario}</span>`
+                    ? `<b>Hora: ${r.data_hora.split(' ')[1]}</b> - ${r.local}<br><span style="font-size:12px;color:#666;">C/Completas: ${r.completas} | C/Incompletas: ${r.incompletas} | AV: ${r.avulsas}</span>`
                     : `<b>Hora: ${r.data_hora.split(' ')[1]}</b><br><span style="font-size:12px;color:#666;">Val: ${r.data_validade} - CX: ${r.caixas} | UN: ${r.unidades}</span>`;
                 
                 html += `<div class="hist-item" onclick='editarRegistro(${JSON.stringify(r)})'>
@@ -318,7 +324,8 @@
             let payload = { acao: moduloAtivo === 'vasilhame' ? 'salvar_vasilhame' : 'salvar_validade', linha: document.getElementById('form-linha').value, raw_data_hora: document.getElementById('form-raw-data').value, data_hora: document.getElementById('form-data-hora').value };
             if(moduloAtivo === 'vasilhame') {
                 payload.usuario = document.getElementById('form-usuario').value; payload.vasilhame = document.getElementById('form-vasilhame').value; payload.local = document.getElementById('form-local').value;
-                payload.completas = document.getElementById('form-completas').value; payload.incompletas = document.getElementById('form-incompletas').value; payload.avulsas = document.getElementById('form-avulsas').value; payload.barril = document.getElementById('form-barril').value; payload.cilindros = document.getElementById('form-cilindros').value;
+                payload.completas = document.getElementById('form-completas').value; payload.incompletas = document.getElementById('form-incompletas').value; payload.avulsas = document.getElementById('form-avulsas').value; 
+                payload.barril = document.getElementById('form-barril').value; payload.cilindros = document.getElementById('form-cilindros').value;
                 if(!payload.usuario) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Usuário Conferente!"); }
                 if(!payload.vasilhame) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Vasilhame!"); }
             } else {
