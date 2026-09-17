@@ -92,10 +92,10 @@
             <label class="info-label" id="label-usuario" style="display:none;">Usuário Conferente: <span style="color:red">*</span></label>
             <select id="form-usuario" class="input-campo" style="display:none;">
                 <option value="">Selecione o Conferente...</option>
-                <!-- Removido o Conferente João conforme solicitado -->
                 <option value="MARIO CELSO DEVIDE">Mario Celso Devide</option>
             </select>
 
+            <!-- VASILHAMES -->
             <div id="campos-vasilhame" style="display: none;">
                 <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
                 <select id="form-vasilhame" class="input-campo"></select>
@@ -121,6 +121,7 @@
                 </div>
             </div>
 
+            <!-- VALIDADE -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
                 <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
@@ -132,7 +133,19 @@
                 </div>
 
                 <label class="info-label">Data de Validade: <span style="color:red">*</span></label>
-                <input type="date" id="form-data-validade" class="input-campo">
+                <input type="date" id="form-data-validade" class="input-campo" onchange="calcularDiasRestantes()">
+
+                <!-- ADICIONADO: DIAS RESTANTES E STATUS VISUAL -->
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <div style="flex: 1;">
+                        <label class="info-label">Dias Restantes:</label>
+                        <input type="text" id="form-dias" class="input-campo travado" style="font-weight: 700; text-align: center; font-size: 18px;" readonly>
+                    </div>
+                    <div style="flex: 2;">
+                        <label class="info-label">Status da Validade:</label>
+                        <input type="text" id="form-status" class="input-campo travado" style="font-weight: 700; text-align: center;" readonly>
+                    </div>
+                </div>
             </div>
 
             <button class="btn-principal" id="btn-salvar" onclick="salvarFormulario()">💾 Salvar Lançamento</button>
@@ -140,8 +153,8 @@
     </div>
 
     <script>
-        // ⚠️ INSIRA AQUI O SEU NOVO LINK (TERMINADO EM /exec)
-        const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; 
+        // ⚠️ INSIRA AQUI O SEU LINK DE IMPLANTAÇÃO!
+        const API_URL = "URL_DO_SEU_WEB_APP_AQUI"; 
 
         let moduloAtivo = ""; let dataAtiva = ""; let registrosDoDiaAtivo = [];
 
@@ -238,7 +251,6 @@
                     let cap = 24; let nUp = r.nome.toUpperCase();
                     if(nUp.includes("1L")) cap = 12;
                     if(nUp.includes("CILINDRO") || nUp.includes("BARRIL") || nUp.includes("GARRAFA")) cap = 0; 
-                    
                     let totalGf = (r.completas * cap) + r.un; 
                     badgeText = `${r.cx} CX | ${totalGf} GF`;
                 } else {
@@ -293,11 +305,12 @@
             document.getElementById('form-linha').value = r.linha; document.getElementById('form-raw-data').value = r.raw_data_hora; document.getElementById('form-data-hora').value = r.data_hora;
             prepararForm();
             if(moduloAtivo === 'vasilhame') {
-                document.getElementById('form-usuario').value = r.usuario || ""; document.getElementById('form-vasilhame').value = r.vasilhame; document.getElementById('form-local').value = r.local;
+                document.getElementById('form-usuario').value = r.usuario || "MARIO CELSO DEVIDE"; document.getElementById('form-vasilhame').value = r.vasilhame; document.getElementById('form-local').value = r.local;
                 document.getElementById('form-completas').value = r.completas; document.getElementById('form-incompletas').value = r.incompletas; document.getElementById('form-avulsas').value = r.avulsas; 
                 document.getElementById('form-barril').value = r.barril; document.getElementById('form-cilindros').value = r.cilindros || 0;
             } else {
                 document.getElementById('form-produto').value = r.produto; document.getElementById('form-caixas').value = r.caixas; document.getElementById('form-unidades').value = r.unidades; document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
+                calcularDiasRestantes(); // Pinta o status assim que entra na edição
             }
             esconderTudo(); document.getElementById('tela-form').style.display = 'flex';
         }
@@ -309,7 +322,46 @@
             document.getElementById('campos-validade').style.display = moduloAtivo === 'validade' ? 'block' : 'none';
             if(!document.getElementById('form-linha').value) {
                 document.getElementById('form-vasilhame').value = ""; document.getElementById('form-produto').value = "";
+                document.getElementById('form-usuario').value = "MARIO CELSO DEVIDE";
+                document.getElementById('form-data-validade').value = "";
+                document.getElementById('form-dias').value = "";
+                document.getElementById('form-status').value = "";
+                document.getElementById('form-status').style.backgroundColor = "#e5e7eb";
+                document.getElementById('form-status').style.color = "var(--text-muted)";
                 ['form-completas','form-incompletas','form-avulsas','form-barril','form-cilindros','form-caixas','form-unidades'].forEach(id => document.getElementById(id).value = "0");
+            }
+        }
+
+        function calcularDiasRestantes() {
+            let dt = document.getElementById('form-data-validade').value;
+            if(!dt) {
+                document.getElementById('form-dias').value = "";
+                document.getElementById('form-status').value = "";
+                document.getElementById('form-status').style.backgroundColor = "#e5e7eb";
+                document.getElementById('form-status').style.color = "var(--text-muted)";
+                return;
+            }
+            
+            let valDate = new Date(dt + "T00:00:00");
+            let hoje = new Date();
+            hoje.setHours(0,0,0,0);
+            
+            let diff = Math.ceil((valDate - hoje) / (1000 * 3600 * 24));
+            document.getElementById('form-dias').value = diff;
+            
+            let statusEl = document.getElementById('form-status');
+            if (diff <= 45) {
+                statusEl.value = "VALIDADE CURTA";
+                statusEl.style.backgroundColor = "#fee2e2";
+                statusEl.style.color = "#dc2626";
+            } else if (diff < 60) {
+                statusEl.value = "ATENÇÃO";
+                statusEl.style.backgroundColor = "#fef3c7";
+                statusEl.style.color = "#d97706";
+            } else {
+                statusEl.value = "OK";
+                statusEl.style.backgroundColor = "#d1fae5";
+                statusEl.style.color = "#059669";
             }
         }
 
