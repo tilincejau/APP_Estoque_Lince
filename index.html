@@ -46,9 +46,8 @@
         .hist-item { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .hist-item:active { background: #f9fafb; }
 
-        /* NOVO BOTÃO FIXED NO RODAPÉ */
-        .btn-fixed-bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: #0284c7; color: white; border: none; border-radius: 30px; padding: 18px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3); cursor: pointer; z-index: 1000; text-align: center; }
-        .btn-fixed-bottom:active { background-color: #0369a1; transform: translateX(-50%) scale(0.98); }
+        .btn-fixed-bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: #0ea5e9; color: white; border: none; border-radius: 30px; padding: 18px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); cursor: pointer; z-index: 1000; text-align: center; }
+        .btn-fixed-bottom:active { background-color: #0284c7; transform: translateX(-50%) scale(0.98); }
     </style>
 </head>
 <body>
@@ -70,7 +69,7 @@
         <button class="btn-fixed-bottom" onclick="novaContagem()">Fazer nova contagem</button>
     </div>
 
-    <!-- TELA DETALHES DO DIA (RESUMO E EDIÇÃO) -->
+    <!-- TELA DETALHES DO DIA -->
     <div id="tela-dia" class="app-container" style="display: none; padding-bottom: 100px;">
         <button class="btn-secundario" id="btn-voltar-dia" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-historico')">⬅ Voltar</button>
         <h2 class="titulo-tela" style="font-size: 18px;" id="titulo-dia">Data: --/--/----</h2>
@@ -79,11 +78,11 @@
         <div id="lista-detalhes-dia" style="display: none;"></div>
         
         <button class="btn-principal" style="background: #10b981; margin-top: 15px;" id="btn-gerar-relatorio" onclick="gerarRelatorioDia()">📊 Gerar Relatório Deste Dia</button>
-        <button class="btn-fixed-bottom" style="background-color: #f59e0b;" onclick="novoRegistroDia()">➕ Novo Lançamento</button>
+        <button class="btn-fixed-bottom" style="background-color: #f59e0b;" onclick="novoRegistroDia()">➕ Adicionar Lançamento</button>
     </div>
 
-    <!-- TELA FORMULÁRIO (NOVO/EDITAR) -->
-    <div id="tela-form" class="app-container" style="display: none;">
+    <!-- TELA FORMULÁRIO -->
+    <div id="tela-form" class="app-container" style="display: none; padding-bottom: 50px;">
         <button class="btn-secundario" style="padding: 10px; width: 100px; margin-bottom: 10px;" onclick="voltarPara('tela-dia')">⬅ Cancelar</button>
         
         <div class="card" id="form-container">
@@ -101,7 +100,6 @@
                 <option value="JOÃO MARCELO MAGON BONINI">João Marcelo Magon Bonini</option>
             </select>
 
-            <!-- Campos Vasilhame -->
             <div id="campos-vasilhame" style="display: none;">
                 <label class="info-label">Vasilhame Padrão: <span style="color:red">*</span></label>
                 <select id="form-vasilhame" class="input-campo"></select>
@@ -121,9 +119,13 @@
                     <div style="flex:1;"><label class="info-label">CX Incompletas:</label><input type="number" id="form-incompletas" class="input-campo" value="0"></div>
                     <div style="flex:1;"><label class="info-label">Barril:</label><input type="number" id="form-barril" class="input-campo" value="0"></div>
                 </div>
+                <!-- NOVO CAMPO CILINDROS -->
+                <div style="display: flex; gap: 8px;">
+                    <div style="flex:1;"><label class="info-label">Cilindros:</label><input type="number" id="form-cilindros" class="input-campo" value="0"></div>
+                    <div style="flex:1;"></div>
+                </div>
             </div>
 
-            <!-- Campos Validade -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
                 <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
@@ -217,7 +219,8 @@
                 if(!resumo[nome]) resumo[nome] = { nome: nome, cx: 0, un: 0, contagem: 0 };
                 resumo[nome].contagem++;
                 if(moduloAtivo === 'vasilhame') {
-                    resumo[nome].cx += (parseInt(r.completas)||0) + (parseInt(r.barril)||0);
+                    // CILINDROS e BARRIS também são exibidos como CX no resumo visual para facilitar a vida do usuário
+                    resumo[nome].cx += (parseInt(r.completas)||0) + (parseInt(r.barril)||0) + (parseInt(r.cilindros)||0);
                     resumo[nome].un += parseInt(r.avulsas)||0;
                 } else {
                     resumo[nome].cx += parseInt(r.caixas)||0;
@@ -228,9 +231,23 @@
             let html = "";
             for(let key in resumo) {
                 let r = resumo[key];
+                let badgeText = "";
+                
+                if(moduloAtivo === 'vasilhame') {
+                    let cap = 24;
+                    let nUp = r.nome.toUpperCase();
+                    if(nUp.includes("1L")) cap = 12;
+                    if(nUp.includes("CILINDRO") || nUp.includes("BARRIL")) cap = 0; // Barris e Cilindros não geram garrafas avulsas virtuais
+                    
+                    let totalGf = (r.cx * cap) + r.un;
+                    badgeText = `${r.cx} CX | ${totalGf} GF`;
+                } else {
+                    badgeText = `${r.cx} CX | ${r.un} UN`;
+                }
+
                 html += `<div class="hist-card" onclick="abrirDetalheProduto('${r.nome}')" style="display:flex; justify-content:space-between; align-items:center;">
                     <div><strong style="color:var(--primary-color); font-size:14px;">${r.nome}</strong><br><span style="font-size:12px; color:var(--text-muted);">${r.contagem} lançamento(s)</span></div>
-                    <div class="hist-badge" style="text-align:right;">TOTAL<br><span class="hist-badge-num">${r.cx} CX | ${r.un} ${moduloAtivo==='vasilhame'?'GF':'UN'}</span></div>
+                    <div class="hist-badge" style="text-align:right;">TOTAL<br><span class="hist-badge-num">${badgeText}</span></div>
                 </div>`;
             }
             container.innerHTML = html;
@@ -277,7 +294,8 @@
             prepararForm();
             if(moduloAtivo === 'vasilhame') {
                 document.getElementById('form-usuario').value = r.usuario || ""; document.getElementById('form-vasilhame').value = r.vasilhame; document.getElementById('form-local').value = r.local;
-                document.getElementById('form-completas').value = r.completas; document.getElementById('form-incompletas').value = r.incompletas; document.getElementById('form-avulsas').value = r.avulsas; document.getElementById('form-barril').value = r.barril;
+                document.getElementById('form-completas').value = r.completas; document.getElementById('form-incompletas').value = r.incompletas; document.getElementById('form-avulsas').value = r.avulsas; 
+                document.getElementById('form-barril').value = r.barril; document.getElementById('form-cilindros').value = r.cilindros || 0;
             } else {
                 document.getElementById('form-produto').value = r.produto; document.getElementById('form-caixas').value = r.caixas; document.getElementById('form-unidades').value = r.unidades; document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
             }
@@ -291,7 +309,7 @@
             document.getElementById('campos-validade').style.display = moduloAtivo === 'validade' ? 'block' : 'none';
             if(!document.getElementById('form-linha').value) {
                 document.getElementById('form-vasilhame').value = ""; document.getElementById('form-produto').value = "";
-                ['form-completas','form-incompletas','form-avulsas','form-barril','form-caixas','form-unidades'].forEach(id => document.getElementById(id).value = "0");
+                ['form-completas','form-incompletas','form-avulsas','form-barril','form-cilindros','form-caixas','form-unidades'].forEach(id => document.getElementById(id).value = "0");
             }
         }
 
@@ -300,7 +318,7 @@
             let payload = { acao: moduloAtivo === 'vasilhame' ? 'salvar_vasilhame' : 'salvar_validade', linha: document.getElementById('form-linha').value, raw_data_hora: document.getElementById('form-raw-data').value, data_hora: document.getElementById('form-data-hora').value };
             if(moduloAtivo === 'vasilhame') {
                 payload.usuario = document.getElementById('form-usuario').value; payload.vasilhame = document.getElementById('form-vasilhame').value; payload.local = document.getElementById('form-local').value;
-                payload.completas = document.getElementById('form-completas').value; payload.incompletas = document.getElementById('form-incompletas').value; payload.avulsas = document.getElementById('form-avulsas').value; payload.barril = document.getElementById('form-barril').value;
+                payload.completas = document.getElementById('form-completas').value; payload.incompletas = document.getElementById('form-incompletas').value; payload.avulsas = document.getElementById('form-avulsas').value; payload.barril = document.getElementById('form-barril').value; payload.cilindros = document.getElementById('form-cilindros').value;
                 if(!payload.usuario) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Usuário Conferente!"); }
                 if(!payload.vasilhame) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Vasilhame!"); }
             } else {
