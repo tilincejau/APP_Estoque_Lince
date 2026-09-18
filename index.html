@@ -124,11 +124,10 @@
                 </div>
             </div>
 
-            <!-- VALIDADE -->
+            <!-- VALIDADE (ATUALIZADO PARA SELECT) -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
-                <input type="text" id="form-produto" class="input-campo" list="lista-produtos" placeholder="Pesquise o produto...">
-                <datalist id="lista-produtos"></datalist>
+                <select id="form-produto" class="input-campo"></select>
 
                 <div style="display: flex; gap: 8px;">
                     <div style="flex:1;"><label class="info-label">Qtd. Caixas:</label><input type="number" id="form-caixas" class="input-campo" value="0"></div>
@@ -175,8 +174,10 @@
             try {
                 let res = await chamarAPI({ acao: 'buscar_dados_iniciais' });
                 if(res.sucesso) {
-                    // A CORREÇÃO ESTÁ NA LINHA ABAIXO: Fechamento da tag </option> e inserção do texto interno ${p.nome}
-                    let optP = ''; res.produtos.forEach(p => { optP += `<option value="${p.nome}">${p.nome}</option>`; }); document.getElementById('lista-produtos').innerHTML = optP;
+                    // ATUALIZADO: Agora preenche o <select> em vez de um <datalist>
+                    let optP = '<option value="">Selecione o produto...</option>'; 
+                    res.produtos.forEach(p => { optP += `<option value="${p.nome}">${p.nome}</option>`; }); 
+                    document.getElementById('form-produto').innerHTML = optP;
                     
                     let optV = '<option value="">Selecione...</option>'; res.vasilhames.forEach(v => { optV += `<option value="${v}">${v}</option>`; }); document.getElementById('form-vasilhame').innerHTML = optV;
                 }
