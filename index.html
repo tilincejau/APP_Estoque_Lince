@@ -493,19 +493,33 @@
             });
         }
 
-        async function gerarRelatorioDia() {
-            let btn = document.getElementById('btn-gerar-relatorio'); let textoOriginal = btn.innerText; btn.innerText = "Gerando... Aguarde ⏳"; btn.disabled = true;
+        function gerarRelatorioDia() {
+            let btn = document.getElementById('btn-gerar-relatorio'); 
+            
             let user = "";
             if (moduloAtivo === 'vasilhame') {
                 let itemNaTela = document.querySelector('.hist-item b'); 
                 user = document.getElementById('form-usuario').value || (itemNaTela ? "MARIO CELSO DEVIDE" : prompt("Qual o seu nome para sair no relatório?"));
+                if (!user) return; // Se o usuário cancelar o prompt, interrompe.
             }
+            
             let payload = { acao: moduloAtivo === 'vasilhame' ? 'gerar_pdf_vas' : 'gerar_excel', data: dataAtiva, usuario: user };
-            try {
-                let res = await chamarAPI(payload);
-                if (res.sucesso) { alert("✅ Relatório gerado com sucesso no Drive!"); if(res.link) window.open(res.link, '_blank'); } else { alert("❌ Erro: " + res.erro); }
-            } catch(e) { alert("❌ Erro de conexão."); }
-            btn.innerText = textoOriginal; btn.disabled = false;
+            
+            // 1. Avisa na hora usando o Toast e NÃO trava o app
+            mostrarToast("🚀 Gerando relatório em 2º plano! O arquivo irá para o Drive.");
+            
+            // 2. Aciona o backend silenciosamente
+            chamarAPI(payload).then(res => {
+                if (res.sucesso) {
+                    // Avisa que terminou de salvar lá na nuvem
+                    mostrarToast("✅ Relatório salvo no Google Drive com sucesso!");
+                } else {
+                    alert("❌ Erro ao gerar relatório: " + res.erro);
+                }
+            }).catch(e => {
+                console.error(e);
+                alert("❌ Falha de conexão ao tentar gerar relatório.");
+            });
         }
 
         async function sincronizarTXT() {
