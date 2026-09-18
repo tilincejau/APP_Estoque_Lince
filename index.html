@@ -55,9 +55,14 @@
         .dropdown-item { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f3f4f6; cursor: pointer; color: var(--text-main); }
         .dropdown-item:last-child { border-bottom: none; }
         .dropdown-item:active { background-color: #f0fdf4; color: var(--primary-color); font-weight: 600; }
+
+        /* ESTILO DO AVISO EM SEGUNDO PLANO */
+        #toast { visibility: hidden; min-width: 250px; background-color: #1f2937; color: #fff; text-align: center; border-radius: 30px; padding: 14px; position: fixed; z-index: 10000; left: 50%; bottom: 80px; transform: translateX(-50%); font-size: 14px; font-weight: 600; box-shadow: 0px 8px 20px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 100px; }
     </style>
 </head>
 <body>
+    <div id="toast"></div>
 
     <div id="tela-home" class="app-container">
         <img src="https://i.postimg.cc/x1Dpgf8n/capa-app-logistica-(400-x-400-px)-(2).png" alt="Logo Lince" class="logo">
@@ -135,7 +140,6 @@
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
                 <div class="dropdown-container">
-                    <!-- REMOVIDO o onblur para evitar que o teclado esconda a lista no celular -->
                     <input type="text" id="form-produto-pesquisa" class="input-campo" placeholder="Digite para pesquisar..." autocomplete="off" style="margin-bottom: 0;" onfocus="mostrarDropdown()" onkeyup="filtrarDropdown()">
                     <div id="lista-produtos-dropdown" class="dropdown-lista"></div>
                 </div>
@@ -222,14 +226,11 @@
             document.getElementById('lista-produtos-dropdown').style.display = 'none';
         }
 
-        // NOVIDADE: Clica fora do dropdown para esconder a lista
         document.addEventListener('click', function(event) {
             let input = document.getElementById('form-produto-pesquisa');
             let dropdown = document.getElementById('lista-produtos-dropdown');
             
-            // Verifica se a tela de validade está aberta e o dropdown está visível
             if (input && dropdown && dropdown.style.display === 'block') {
-                // Se o usuário tocou fora do input E fora da lista
                 if (event.target !== input && !dropdown.contains(event.target)) {
                     dropdown.style.display = 'none';
                 }
@@ -252,8 +253,8 @@
                     let html = "";
                     res.historico.forEach(d => {
                         html += `<div class="hist-card" onclick="abrirDia('${d.data}')">
-                           <div class="hist-date">${d.data}</div>
-                           <div class="hist-body"><div style="font-size:12px; color:#555;"><b>Início:</b> ${d.inicio}<br><b>Fim:</b> ${d.fim}</div><div class="hist-badge">TOTAL CX/AV<br><span class="hist-badge-num">${d.total_cx} / ${d.total_av}</span></div></div>
+                            <div class="hist-date">${d.data}</div>
+                            <div class="hist-body"><div style="font-size:12px; color:#555;"><b>Início:</b> ${d.inicio}<br><b>Fim:</b> ${d.fim}</div><div class="hist-badge">TOTAL CX/AV<br><span class="hist-badge-num">${d.total_cx} / ${d.total_av}</span></div></div>
                         </div>`;
                     });
                     container.innerHTML = html;
@@ -428,16 +429,24 @@
             }
         }
 
-        async function salvarFormulario() {
-            let btn = document.getElementById('btn-salvar'); btn.innerText = "Salvando... ⏳"; btn.disabled = true;
+        function mostrarToast(msg) {
+            let toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // Função sem o 'async' para não travar a tela
+        function salvarFormulario() {
             let payload = { acao: moduloAtivo === 'vasilhame' ? 'salvar_vasilhame' : 'salvar_validade', linha: document.getElementById('form-linha').value, raw_data_hora: document.getElementById('form-raw-data').value, data_hora: document.getElementById('form-data-hora').value };
             
             if(moduloAtivo === 'vasilhame') {
                 payload.usuario = document.getElementById('form-usuario').value; payload.vasilhame = document.getElementById('form-vasilhame').value; payload.local = document.getElementById('form-local').value;
                 payload.completas = document.getElementById('form-completas').value; payload.incompletas = document.getElementById('form-incompletas').value; payload.avulsas = document.getElementById('form-avulsas').value; 
                 payload.barril = document.getElementById('form-barril').value; payload.cilindros = document.getElementById('form-cilindros').value;
-                if(!payload.usuario) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Usuário Conferente!"); }
-                if(!payload.vasilhame) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Vasilhame!"); }
+                
+                if(!payload.usuario) return alert("Preencha o Usuário Conferente!");
+                if(!payload.vasilhame) return alert("Preencha o Vasilhame!");
             } else {
                 payload.id = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase(); 
                 payload.produto = document.getElementById('form-produto').value; 
@@ -445,12 +454,43 @@
                 payload.unidades = document.getElementById('form-unidades').value; 
                 payload.data_validade = document.getElementById('form-data-validade').value;
                 
-                if(!payload.produto) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Por favor, selecione um produto da lista!"); }
-                if(!payload.data_validade) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha a Validade!"); }
+                if(!payload.produto) return alert("Por favor, selecione um produto da lista!");
+                if(!payload.data_validade) return alert("Preencha a Validade!");
             }
             
-            try { let res = await chamarAPI(payload); if (res.sucesso) { abrirDia(dataAtiva); } else { alert("❌ Erro: " + res.erro); } } catch(e) { alert("❌ Erro de conexão."); }
-            btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false;
+            // OTIMIZAÇÃO: Atualização visual imediata (Optimistic UI)
+            let isEdit = !!payload.linha;
+            let novoRegistro = { 
+                linha: payload.linha || Date.now(), 
+                data_hora: payload.data_hora,
+                raw_data_hora: payload.raw_data_hora || payload.data_hora 
+            };
+
+            if (moduloAtivo === 'vasilhame') {
+                novoRegistro.usuario = payload.usuario; novoRegistro.vasilhame = payload.vasilhame; novoRegistro.local = payload.local;
+                novoRegistro.completas = payload.completas; novoRegistro.incompletas = payload.incompletas; novoRegistro.avulsas = payload.avulsas; novoRegistro.barril = payload.barril; novoRegistro.cilindros = payload.cilindros;
+            } else {
+                novoRegistro.id = payload.id; novoRegistro.produto = payload.produto; novoRegistro.caixas = payload.caixas; novoRegistro.unidades = payload.unidades;
+                novoRegistro.data_validade = payload.data_validade.split('-').reverse().join('/');
+            }
+
+            if (isEdit) {
+                let idx = registrosDoDiaAtivo.findIndex(r => r.linha == payload.linha);
+                if(idx >= 0) registrosDoDiaAtivo[idx] = novoRegistro;
+            } else { registrosDoDiaAtivo.push(novoRegistro); }
+
+            // Fecha a tela na hora e avisa o usuário
+            voltarPara('tela-dia');
+            renderizarResumoDia();
+            mostrarToast("🚀 Enviando em segundo plano...");
+
+            // Roda no Backend silenciosamente
+            chamarAPI(payload).then(res => {
+                if (!res.sucesso) alert("❌ Erro ao salvar em segundo plano: " + res.erro);
+            }).catch(e => {
+                console.error(e);
+                alert("❌ Falha de conexão ao tentar salvar.");
+            });
         }
 
         async function gerarRelatorioDia() {
