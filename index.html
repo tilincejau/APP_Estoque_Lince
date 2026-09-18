@@ -48,6 +48,13 @@
 
         .btn-fixed-bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: #0ea5e9; color: white; border: none; border-radius: 30px; padding: 18px; font-size: 16px; font-weight: 700; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4); cursor: pointer; z-index: 1000; text-align: center; }
         .btn-fixed-bottom:active { background-color: #0284c7; transform: translateX(-50%) scale(0.98); }
+
+        /* ESTILOS DA NOVA LISTA DE PRODUTOS CUSTOMIZADA */
+        .custom-select-container { position: relative; width: 100%; }
+        .custom-options { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1.5px solid var(--border-color); border-radius: 12px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: -10px; }
+        .custom-option { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #f3f4f6; color: var(--text-main); cursor: pointer; }
+        .custom-option:last-child { border-bottom: none; }
+        .custom-option:active { background-color: #f9fafb; color: var(--primary-color); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -124,10 +131,14 @@
                 </div>
             </div>
 
-            <!-- VALIDADE (ATUALIZADO PARA SELECT) -->
+            <!-- VALIDADE (COM DROPDOWN DE PESQUISA CUSTOMIZADO) -->
             <div id="campos-validade" style="display: none;">
                 <label class="info-label">Produto: <span style="color:red">*</span></label>
-                <select id="form-produto" class="input-campo"></select>
+                <div class="custom-select-container">
+                    <input type="text" id="form-produto-busca" class="input-campo" placeholder="🔍 Digite para pesquisar..." autocomplete="off">
+                    <div id="lista-produtos-custom" class="custom-options"></div>
+                    <input type="hidden" id="form-produto">
+                </div>
 
                 <div style="display: flex; gap: 8px;">
                     <div style="flex:1;"><label class="info-label">Qtd. Caixas:</label><input type="number" id="form-caixas" class="input-campo" value="0"></div>
@@ -159,6 +170,7 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbxSYGNFeswFA24QlljQF9LswooqMpkJE7460mkaOrq0UGqgkoIoFYElMS6xNeuSDmFnxA/exec"; 
 
         let moduloAtivo = ""; let dataAtiva = ""; let registrosDoDiaAtivo = [];
+        let listaProdutosGlobal = []; // Variável para armazenar produtos para a pesquisa
 
         async function chamarAPI(payload) {
             let req = await fetch(API_URL, { method: 'POST', redirect: 'follow', headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
@@ -174,15 +186,55 @@
             try {
                 let res = await chamarAPI({ acao: 'buscar_dados_iniciais' });
                 if(res.sucesso) {
-                    // ATUALIZADO: Agora preenche o <select> em vez de um <datalist>
-                    let optP = '<option value="">Selecione o produto...</option>'; 
-                    res.produtos.forEach(p => { optP += `<option value="${p.nome}">${p.nome}</option>`; }); 
-                    document.getElementById('form-produto').innerHTML = optP;
+                    // Armazena a lista e renderiza o dropdown customizado
+                    listaProdutosGlobal = res.produtos;
+                    renderizarListaProdutos(listaProdutosGlobal);
                     
                     let optV = '<option value="">Selecione...</option>'; res.vasilhames.forEach(v => { optV += `<option value="${v}">${v}</option>`; }); document.getElementById('form-vasilhame').innerHTML = optV;
                 }
             } catch(e) { console.error("Erro no load inicial:", e); }
         };
+
+        // --- SISTEMA DE DROPDOWN CUSTOMIZADO (PESQUISA) ---
+        function renderizarListaProdutos(lista) {
+            let container = document.getElementById('lista-produtos-custom');
+            if(lista.length === 0) {
+                container.innerHTML = `<div class="custom-option" style="color:var(--text-muted);">Nenhum produto encontrado...</div>`;
+                return;
+            }
+            let html = '';
+            lista.forEach(p => {
+                html += `<div class="custom-option" onclick="selecionarProduto('${p.nome}')">${p.nome}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        document.getElementById('form-produto-busca').addEventListener('input', function(e) {
+            let termo = e.target.value.toLowerCase();
+            document.getElementById('lista-produtos-custom').style.display = 'block';
+            let filtrados = listaProdutosGlobal.filter(p => p.nome.toLowerCase().includes(termo));
+            renderizarListaProdutos(filtrados);
+        });
+
+        document.getElementById('form-produto-busca').addEventListener('focus', function() {
+            document.getElementById('lista-produtos-custom').style.display = 'block';
+            this.select(); // Seleciona o texto atual para facilitar a nova digitação
+            renderizarListaProdutos(listaProdutosGlobal);
+        });
+
+        // Fecha a lista se clicar fora dela
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select-container')) {
+                document.getElementById('lista-produtos-custom').style.display = 'none';
+            }
+        });
+
+        function selecionarProduto(nome) {
+            document.getElementById('form-produto').value = nome; // Guarda no input oculto
+            document.getElementById('form-produto-busca').value = nome; // Exibe no input visível
+            document.getElementById('lista-produtos-custom').style.display = 'none'; // Esconde a lista
+        }
+        // ----------------------------------------------------
 
         function esconderTudo() { document.querySelectorAll('.app-container').forEach(e => e.style.display = 'none'); }
         function voltarPara(id) { esconderTudo(); document.getElementById(id).style.display = 'flex'; }
@@ -315,7 +367,9 @@
                 document.getElementById('form-completas').value = r.completas; document.getElementById('form-incompletas').value = r.incompletas; document.getElementById('form-avulsas').value = r.avulsas; 
                 document.getElementById('form-barril').value = r.barril; document.getElementById('form-cilindros').value = r.cilindros || 0;
             } else {
-                document.getElementById('form-produto').value = r.produto; document.getElementById('form-caixas').value = r.caixas; document.getElementById('form-unidades').value = r.unidades; document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
+                document.getElementById('form-produto').value = r.produto; 
+                document.getElementById('form-produto-busca').value = r.produto; // Atualiza o campo visual
+                document.getElementById('form-caixas').value = r.caixas; document.getElementById('form-unidades').value = r.unidades; document.getElementById('form-data-validade').value = r.data_validade.split('/').reverse().join('-');
                 calcularDiasRestantes(); 
             }
             esconderTudo(); document.getElementById('tela-form').style.display = 'flex';
@@ -327,7 +381,9 @@
             document.getElementById('form-usuario').style.display = moduloAtivo === 'vasilhame' ? 'block' : 'none';
             document.getElementById('campos-validade').style.display = moduloAtivo === 'validade' ? 'block' : 'none';
             if(!document.getElementById('form-linha').value) {
-                document.getElementById('form-vasilhame').value = ""; document.getElementById('form-produto').value = "";
+                document.getElementById('form-vasilhame').value = ""; 
+                document.getElementById('form-produto').value = "";
+                document.getElementById('form-produto-busca').value = ""; // Limpa o campo visual de pesquisa
                 document.getElementById('form-usuario').value = "MARIO CELSO DEVIDE";
                 document.getElementById('form-data-validade').value = "";
                 document.getElementById('form-dias').value = "";
@@ -382,8 +438,12 @@
                 if(!payload.usuario) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Usuário Conferente!"); }
                 if(!payload.vasilhame) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha o Vasilhame!"); }
             } else {
-                payload.id = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase(); payload.produto = document.getElementById('form-produto').value; payload.caixas = document.getElementById('form-caixas').value; payload.unidades = document.getElementById('form-unidades').value; payload.data_validade = document.getElementById('form-data-validade').value;
-                if(!payload.produto || !payload.data_validade) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha Produto e Validade!"); }
+                payload.id = "VAL-" + Math.random().toString(36).substr(2, 6).toUpperCase(); 
+                payload.produto = document.getElementById('form-produto').value; // Pega o valor real (oculto)
+                payload.caixas = document.getElementById('form-caixas').value; 
+                payload.unidades = document.getElementById('form-unidades').value; 
+                payload.data_validade = document.getElementById('form-data-validade').value;
+                if(!payload.produto || !payload.data_validade) { btn.innerText = "💾 Salvar Lançamento"; btn.disabled = false; return alert("Preencha Produto (selecione na lista) e Validade!"); }
             }
             
             try { let res = await chamarAPI(payload); if (res.sucesso) { abrirDia(dataAtiva); } else { alert("❌ Erro: " + res.erro); } } catch(e) { alert("❌ Erro de conexão."); }
