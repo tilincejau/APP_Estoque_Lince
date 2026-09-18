@@ -175,7 +175,9 @@
             try {
                 let res = await chamarAPI({ acao: 'buscar_dados_iniciais' });
                 if(res.sucesso) {
-                    let optP = ''; res.produtos.forEach(p => { optP += `<option value="${p.nome}">`; }); document.getElementById('lista-produtos').innerHTML = optP;
+                    // A CORREÇÃO ESTÁ NA LINHA ABAIXO: Fechamento da tag </option> e inserção do texto interno ${p.nome}
+                    let optP = ''; res.produtos.forEach(p => { optP += `<option value="${p.nome}">${p.nome}</option>`; }); document.getElementById('lista-produtos').innerHTML = optP;
+                    
                     let optV = '<option value="">Selecione...</option>'; res.vasilhames.forEach(v => { optV += `<option value="${v}">${v}</option>`; }); document.getElementById('form-vasilhame').innerHTML = optV;
                 }
             } catch(e) { console.error("Erro no load inicial:", e); }
